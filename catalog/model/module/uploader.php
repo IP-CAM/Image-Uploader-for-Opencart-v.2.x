@@ -10,13 +10,14 @@ class ModelModuleUploader extends Model{
   }
 
   public function addImage($data){
-    $sql = "INSERT INTO " . DB_PREFIX . "uploader_image (name, session_id, path, base, format_id, paper_type_id, options, copy_count, size, date) ";
+    $sql = "INSERT INTO " . DB_PREFIX . "uploader_image (name, session_id, path, base, format_id, paper_type_id, set_in_format, options, copy_count, size, date) ";
     $sql .= "VALUES ('" . $this->db->escape($data['name']) . "',";
     $sql .= " '" . $this->db->escape($data['session_id']) . "',";
     $sql .= " '" . $this->db->escape($data['path']) . "',";
     $sql .= " '" . $this->db->escape($data['base']) . "',";
     $sql .= " '" . (int)$data['format_id'] . "',";
     $sql .= " '" . (int)$data['paper_type_id'] . "',";
+    $sql .= " '" . (isset($data['set_in_format'])?(int)$data['set_in_format']:0) . "',";
     $sql .= " '" . $this->db->escape($data['options']) . "',";
     $sql .= " '" . (int)$data['copy_count'] . "',";
     $sql .= " '" . (int)$data['size'] . "',";

@@ -27,6 +27,7 @@ $_['text_total_count'] = "Количество";
 $_['text_conform'] = "Добавить в корзину";
 $_['text_full_price'] = "Сумма со скидкой";
 $_['text_price'] = "Сумма";
+$_['text_load_more'] = "Загрузить больше";
 
 $_['error_format'] = "Поддерживаются форматы zip, png, jpg, jpeg!";
 $_['error_zip'] = "Zip фрхив поврежден!";

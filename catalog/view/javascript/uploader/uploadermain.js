@@ -9,7 +9,6 @@ var uploader = (settings) => {
     singleFileUploads: true
   };
 
-  var views;
   var itemsWrap;
   var formatWrap;
   var total;
@@ -86,7 +85,7 @@ var uploader = (settings) => {
   }
 
   self.error = data => {
-    var message = $('<div class="uploader-error_message"><span class="message-text">" + data + "</span><button class="remove-message"><i class="far fa-times-circle"></i></button></div>');
+    var message = $('<div class="uploader-error_message"><span class="message-text">' + data + '</span><button class="remove-message"><i class="far fa-times-circle"></i></button></div>');
     $(".uploader-error").append(message);
 
     $(message).find(".remove-message").on("click", () => {
@@ -164,10 +163,12 @@ var uploader = (settings) => {
         return;
       }
     }else{
-      if($(trigger).attr("name") == "copy_count")
+      if($(trigger).attr("name") == "copy_count"){
+        self.countChange(trigger);
         items[0] = $(trigger).parent().parent().parent().parent().attr("data-name");
-      else
+      }else{
         items[0] = $(trigger).parent().parent().parent().attr("data-name");
+      }
 
       var nodeName = $(trigger).prop('nodeName');
 
@@ -240,6 +241,28 @@ var uploader = (settings) => {
     });
   }
 
+  self.count = trigger => {
+    var count = +$(trigger).parent().find("input").val();
+    if($(trigger).attr("data-type") == "minus" && count > 1){
+      $(trigger).parent().find("input").val(--count);
+      return true;
+    }else if($(trigger).attr("data-type") == "plus"){
+      $(trigger).parent().find("input").val(++count);
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+  self.countChange = trigger => {
+    var count = +$(trigger).val().replace(/,/, '.');
+    if(isNaN(count) || count <= 1){
+      $(trigger).val(1);
+    }else if(Number(count) === count && count % 1 !== 0){
+      $(trigger).val(Math.floor(count));
+    }
+  }
+
   var calculateMask = item => {
     $(item).find(".item-inner, img").css({
       "height": "auto",
@@ -308,20 +331,19 @@ var uploader = (settings) => {
   }
 
   self.uploadSelected = trigger => {
-    var itemsView = $(trigger).parent().parent().parent();
-        items = itemsView.find(".selected"),
-        social_upload = {};
+    var itemsUploadWrap = $(trigger).parent().parent().parent().parent();
+        socialUpload = {};
 
-    items.each((i, item) => {
-      social_upload[i] = $(item).attr("data-url")
+    itemsUploadWrap.find(".selected").each((i, item) => {
+      socialUpload[i] = $(item).attr("data-url")
     });
 
-    if(items.length > 0){
+    if(itemsUploadWrap.find(".selected").length > 0){
       $.ajax({
         url: "index.php?route=module/" + settings.uploaderType + "_uploader/upload",
         type: "post",
         dataType: "json",
-        data: "social_upload=" + encodeURIComponent(JSON.stringify(social_upload)),
+        data: "social_upload=" + encodeURIComponent(JSON.stringify(socialUpload)),
         success: (json) => {
           if(json["success"]){
             var data = json.success.data,
@@ -333,11 +355,12 @@ var uploader = (settings) => {
                 calculateMask(".item[data-name=\'" + item.name + "\']");
               });
             });
+
             self.update(data);
 
-            items.removeClass("selected");
-            itemsView.addClass("unset");
-            views.find("#uploaded-images").removeClass("unset");
+            itemsUploadWrap.find(".selected").removeClass("selected");
+            itemsUploadWrap.find(".open").removeClass("open").addClass("ready-open");
+            itemsUploadWrap.addClass("unset");
           }else{
             self.error(responseParsed.error);
           }
@@ -358,99 +381,169 @@ var uploader = (settings) => {
   self.instagram = {};
   self.instagram.accessToken = false;
   self.instagram.nextUrl = null;
-  self.instagram.doRequest = false;
 
   self.instagram.login  = () => {
-    //console.log('https://instagram.com/oauth/authorize/?client_id=d103bb3cf5c84baca2a28a5a502ec7be&redirect_uri=' + encodeURI(window.location) + '&response_type=code');
-    window.location = 'https://instagram.com/oauth/authorize/?client_id=d103bb3cf5c84baca2a28a5a502ec7be&redirect_uri=http://photoradost.loc/social/redirect.php&response_type=code';
-    //window.open('https://instagram.com/oauth/authorize/?client_id=d103bb3cf5c84baca2a28a5a502ec7be&redirect_uri=http://photoradost.loc/social/redirect.php?referer=' + window.location + '&response_type=code', 'instagram', '_blank');
-    //window.open('https://instagram.com/oauth/authorize/?client_id=9a7fb1211f9749ce8fb7f7cc0b40b040&redirect_uri=https://fotis.su/api/instagram/redirect?referer=' + encodeURI(window.location) + '&response_type=code', 'instagram', 'width=650,height=350');
-    //window.open('https://instagram.com/oauth/authorize/?client_id=9a7fb1211f9749ce8fb7f7cc0b40b040&redirect_uri=https://fotis.su/api/instagram/redirect?referer=' + window.location + '&response_type=code', 'instagram', '_blank');
+    window.location = "https://instagram.com/oauth/authorize/?client_id=d103bb3cf5c84baca2a28a5a502ec7be&redirect_uri=https://photoradost.loc/api/instagram.php&response_type=code";
   }
 
-  self.instagram.show = () => {
-    console.log(self.instagram.accessToken);
-    var insAcc = self.getCookie('insAcc');
-    if (!insAcc){
+  self.instagram.show = (page = null) => {
+    if (!self.instagram.accessToken){
       self.instagram.login();
     }else{
-      self.instagram.setData(insAcc);
+      self.instagram.nextUrl = page;
+      if($('#instagram-loaded .items-container').html() == '' || self.instagram.nextUrl){
+        self.instagram.renderPhotos();
+      }else{
+        $("#instagram-loaded").removeClass("unset");
+      }
     }
   }
 
-  self.instagram.scrollHandler = wrap => {
-  	if(wrap.scrollHeight - wrap.scrollTop <= wrap.offsetHeight && self.instagram.nextUrl !== null && !self.instagram.doRequest) {
-      self.instagram.renderPhotos();
-  	}
-  }
-
-  self.instagram.setData = (data) => {
-    self.instagram.accessToken = data;
-    $('#instagram-loaded .loaded-content').empty();
-    self.instagram.renderPhotos();
-  }
-
   self.instagram.renderPhotos = () => {
-    self.instagram.doRequest = true;
+    $("#instagram-loaded").removeClass("unset");
+    if(self.instagram.nextUrl){
+      $("#instagram-loaded .items-container").find(".social-item_load-more").addClass("loading");
+    }
     $.ajax({
-      url: self.instagram.nextUrl || 'https://api.instagram.com/v1/users/self/media/recent/',
-      data: {access_token: self.instagram.accessToken, count: 30},
-      type: 'GET',
+      url: self.instagram.nextUrl || "https://api.instagram.com/v1/users/self/media/recent/",
+      data: {access_token: self.instagram.accessToken, count: 5},
+      type: "GET",
       crossDomain: true,
-      dataType: 'jsonp',
-      success: function (photos) {
-
-        var data = {items: []};
-        var i, item;
-        for (i in photos.data) {
-          if(photos.data[i].type == "image" || photos.data[i].type == "carousel"){
-            data.items.push({
-              id: photos.data[i].id,
-              url: photos.data[i].images.low_resolution.url,
-              data_url: photos.data[i].link + 'media/?size=l'
-            });
+      dataType: "jsonp",
+      success: function(photos){
+        if(photos.hasOwnProperty("meta") && photos.meta.hasOwnProperty("code") && photos.meta.code == 200){
+          var data = {items: []};
+          var i, item;
+          for (i in photos.data) {
+            if(photos.data[i].type == "image" || photos.data[i].type == "carousel"){
+              data.items.push({
+                id: photos.data[i].id,
+                url: photos.data[i].images.low_resolution.url,
+                data_url: photos.data[i].link + "media/?size=l"
+              });
+            }
           }
+
+          if(self.instagram.nextUrl){
+            $("#instagram-loaded .items-container").find(".social-item_load-more").remove();
+          }
+
+          $("#instagram-loaded .items-container").append(self.template("loaded-items", data));
+
+          if (photos.hasOwnProperty("pagination") && photos.pagination.hasOwnProperty("next_url")) {
+            $("#instagram-loaded .items-container").append(self.template("load-more-button", photos.pagination));
+          }
+
+          $("#instagram-loaded").find(".reload").removeClass("load");
+
+          self.instagram.nextUrl = null;
+        }else{
+          self.instagram.login();
         }
-
-        views.find(".items").addClass("unset");
-        views.find("#instagram-loaded").removeClass("unset");
-
-        $("#instagram-loaded .items-container").append(self.template("loaded-items-instagram", data));
-
-        self.instagram.nextUrl = null;
-        if (photos.hasOwnProperty('pagination') && photos.pagination.hasOwnProperty('next_url')) {
-          self.instagram.nextUrl = photos.pagination.next_url;
-        }
-
-        self.instagram.doRequest = false;
       }
     });
   }
 
+  self.facebook = {};
+  self.facebook.accessToken = false;
+  self.facebook.nextUrl = false;
+  self.facebook.userId = null;
+  self.facebook.loadbox = null;
+  self.facebook.more = 0;
+
+  self.facebook.login  = () => {
+    window.location = "https://www.facebook.com/v3.2/dialog/oauth?client_id=1079984405513021&redirect_uri=https://photoradost.loc/api/facebook.php&response_type=code";
+  }
+
+  self.facebook.show = () => {
+    if (!self.facebook.accessToken && !self.facebook.userId){
+      self.facebook.login();
+    }else{
+      if(self.facebook.loadbox.html() == '' || (self.facebook.nextUrl && self.facebook.loadbox)){
+        self.facebook.render();
+      }else{
+        $("#facebook-loaded").removeClass("unset");
+      }
+    }
+  }
+
+  self.facebook.render = () => {
+    $("#facebook-loaded").removeClass("unset");
+    if(self.facebook.more == 1){
+      self.facebook.loadbox.find(".social-item_load-more").addClass("loading");
+    }
+    $.ajax({
+      url: self.facebook.nextUrl || "https://graph.facebook.com/v3.2/" + self.facebook.userId + "/albums?limit=2",
+      data: {access_token: self.facebook.accessToken},
+      type: "GET",
+      crossDomain: true,
+      dataType: "jsonp",
+      success: function(data){
+        if(!data.hasOwnProperty("error")){
+          self.facebook["show" + self.facebook.content](data);
+          if (data.hasOwnProperty("paging") && data.paging.hasOwnProperty("next")) {
+            self.facebook.loadbox.append(self.template("load-more-button", data.paging));
+          }
+
+          $("#facebook-loaded").find(".reload").removeClass("load");
+
+          self.facebook.nextUrl = null;
+        }else{
+          self.facebook.login();
+        }
+      }
+    });
+  }
+
+  self.facebook.showPhotos = data => {
+    var photos = {items: []};
+    var i, item;
+    for (i in data.data) {
+      photos.items.push({
+        id: data.data[i].id,
+        url: data.data[i].images[data.data[i].images.length - 1].source,
+        data_url: data.data[i].images[0].source
+      });
+    }
+
+    if(self.facebook.more == 1){
+      self.facebook.loadbox.find(".social-item_load-more").remove();
+    }
+
+    self.facebook.loadbox.append(self.template("loaded-items", photos));
+  }
+
+  self.facebook.showAlbums = data => {
+    var albums = {items: []};
+    var i, item;
+    for (i in data.data) {
+      albums.items.push({
+        url: "https://graph.facebook.com/v3.2/" + data.data[i].id + "/photos?limit=2&fields=images,id",
+        name: data.data[i].name
+      });
+    }
+
+    if(self.facebook.more == 1){
+      self.facebook.loadbox.find(".social-item_load-more").remove();
+    }
+
+    self.facebook.loadbox.append(self.template("loaded-albums", albums));
+  }
+
   $(document).on("ready", () => {
-    views = $(".items-wrap");
-    itemsWrap = views.find("#uploaded-images .items-container");
+    itemsWrap = $("#uploaded-images .items-container");
     formatWrap = $(".format-count-container");
     total = $(".summary");
     massChange = $(".mass-change");
 
+    //mask init
     if(typeof settings.ratio != "undefined"){
       itemsWrap.find(".item").each((i, item) => {
         calculateMask(item);
       });
     }
 
-    window.addEventListener("message", function(event) {
-      try {
-        var data = JSON.parse(event.data);
-        if(data.hasOwnProperty('instagram')){
-          self.instagram.setData(data.instagram);
-        }
-      } catch (err) {
-          console.log(err);
-      }
-    }, false);
-
+    //upload
     $(".file-upload").liteUploader(settingsUpload)
     .on("lu:before", (e, files) => {self.beforeUpload(e, files)})
     .on("lu:progress", (e, state) => {self.inProgress(e, state)})
@@ -485,6 +578,7 @@ var uploader = (settings) => {
       $(this).data("liteUploader").startUpload();
     });
 
+    //copy, select, delete, change
     $(document).on("click", ".item-controls_delete, .mass-delete", function() {
       self.deleteItem(this);
     });
@@ -507,23 +601,80 @@ var uploader = (settings) => {
       self.updateItem(this);
     });
 
+    $(document).on("change", ".mass-change input[name=\'copy_count\']", function(){
+      self.countChange(this);
+    });
+
+    $(document).on("click", ".button-count", function(){
+      if(self.count(this)) $(this).parent().find("input").trigger("change");
+    })
+
+    //instagram
+    self.instagram.accessToken = self.getCookie("a_instagram");
+
+    if(window.location.hash == "#instagram"){
+      self.instagram.show();
+      history.pushState("", document.title, window.location.href.substr(0, window.location.href.indexOf('#')));
+    }
+
     $(document).on("click", ".inst-upload", function(e){
       e.preventDefault();
       self.instagram.show();
     });
 
-    $('#instagram-loaded .items-container').on('scroll', function() {
-        self.instagram.scrollHandler(this);
-        console.log(1);
+    $(document).on("click", "#instagram-loaded .items-container .load-more", function() {
+      self.instagram.show($(this).attr("data-page"));
     });
 
-    $('#instagram-loaded .items-container').on('touchmove', function(e) {
-        self.instagram.scrollHandler($('body')[0]);
+    //facebook
+    self.facebook.accessToken = self.getCookie("a_facebook");
+    self.facebook.userId = self.getCookie("f_uid");
+    self.facebook.loadbox = $('#facebook-loaded .items-container');
+
+    if(window.location.hash == "#facebook"){
+      self.facebook.content = "Albums";
+      self.facebook.show();
+      history.pushState("", document.title, window.location.href.substr(0, window.location.href.indexOf('#')));
+    }
+
+    $(document).on("click", ".fb-upload", function(e){
+      e.preventDefault();
+      self.facebook.content = "Albums";
+      self.facebook.show();
     });
 
-    $(document).on("click", ".close-loaded", function(){
-      $(this).parent().parent().parent().addClass("unset");
-      views.find("#uploaded-images").removeClass("unset");
+    $(document).on("click", "#facebook-loaded .social-album .social-album_header", function(){
+      if($(this).parent().hasClass("open")){
+        $(this).parent().removeClass("open").addClass("ready-open");
+      }else{
+        if($(this).parent().hasClass("ready-open")){
+          $(this).parent().removeClass("ready-open").addClass("open");
+        }else{
+          self.facebook.nextUrl = $(this).attr("data-page");
+          self.facebook.loadbox = $(this).parent().find(".social-album_content");
+          self.facebook.content = "Photos";
+          self.facebook.show();
+          $(this).parent().addClass("open");
+        }
+      }
+    });
+
+    $(document).on("click", "#facebook-loaded .social-item_load-more", function(){
+      self.facebook.nextUrl = $(this).find(".load-more").attr("data-page");
+      self.facebook.loadbox = $(this).parent();
+      if($(this).parent().hasClass("items-container"))
+        self.facebook.content = "Albums";
+      else
+        self.facebook.content = "Photos";
+      self.facebook.more = 1;
+      self.facebook.show();
+    });
+
+    //social navigatiuon buttons
+    $(".loaded-buttons .close-loaded").on("click", function(){
+      var wrap = $(this).parent().parent().parent();
+      wrap.parent().addClass("unset");
+      wrap.find(".open").removeClass("open").addClass("ready-open");
     });
 
     $(document).on("click", ".social-item", function(){
@@ -531,8 +682,22 @@ var uploader = (settings) => {
       else $(this).addClass("selected");
     });
 
-    $(document).on("click", ".upload-selected", function(){
+    $(".loaded-buttons .upload-selected").on("click", function(){
       self.uploadSelected(this);
+    });
+
+    $("#facebook-loaded .loaded-buttons .reload").on("click", function(){
+      $(this).addClass("load");
+      self.facebook.loadbox = $('#facebook-loaded .items-container');
+      self.facebook.content = "Albums";
+      self.facebook.loadbox.empty();
+      self.facebook.show();
+    });
+
+    $("#instagram-loaded .loaded-buttons .reload").on("click", function(){
+      $(this).addClass("load");
+      $("#instagram-loaded .items-container").empty();
+      self.instagram.show();
     });
   });
 

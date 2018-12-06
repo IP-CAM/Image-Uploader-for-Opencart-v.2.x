@@ -125,11 +125,7 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['text_price'] = $this->language->get('text_price');
     $this->data['text_full_price'] = $this->language->get('text_full_price');
     $this->data['text_conform'] = $this->language->get('text_conform');
-
-    $this->data['instagram'] = false;
-    if(isset($this->request->get['instagram'])){
-      $this->data['instagram'] = true;
-    }
+    $this->data['text_load_more'] = $this->language->get('text_load_more');
 
     $this->children = array(
       'common/column_left',
