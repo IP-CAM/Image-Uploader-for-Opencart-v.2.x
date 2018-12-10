@@ -17,6 +17,21 @@ var uploader = (settings) => {
     return template(data);
   };
 
+  var resetValues = function(items, values){
+    for(keyItem in items){
+      for(keyVal in values){
+        var option = $(".item[data-name=\'" + items[keyItem] + "\']").find("*[name=\'" + keyVal + "\']"),
+            nodeName = $(option).prop('nodeName'),
+            reset = option.attr("data-reset-val");
+        if(nodeName == "SELECT" || (nodeName == "INPUT" && ($(option).attr("type") == "text" || $(option).attr("type") == "radio"))){
+          option.val(reset);
+        }else{
+          option.prop("checked", +reset);
+        }
+      }
+    }
+  }
+
   //upload callback
   var successUpload = function(response) {
     if(response.hasOwnProperty("success")){
@@ -194,6 +209,7 @@ var uploader = (settings) => {
       data: {"items":encodeURIComponent(JSON.stringify(items)), "values": encodeURIComponent(JSON.stringify(values))},
       beforeSend: () => {
         if(!onlineTrigger){
+          resetValues(items, values);
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
         }
       },
@@ -201,9 +217,10 @@ var uploader = (settings) => {
         if(json['success']){
           if($(trigger).hasClass("mass-submit")){
             for(key in values){
-              $(".item.selected").find("select[name=\'" + key + "\'], input[type=\'text\'][name=\'" + key + "\'], input[type=\'radio\'][name=\'" + key + "\']").val(values[key]);
-              $(".item.selected").find("input[type=\'checkbox\'][name=\'" + key + "\']").prop("checked", values[key]);
+              $(".item.selected").find("select[name=\'" + key + "\'], input[type=\'text\'][name=\'" + key + "\'], input[type=\'radio\'][name=\'" + key + "\']").val(values[key]).attr("data-reset-val", values[key]);
+              $(".item.selected").find("input[type=\'checkbox\'][name=\'" + key + "\']").prop("checked", values[key]).attr("data-reset-val", values[key]);
             }
+
             if(values.hasOwnProperty("format_id") || values.hasOwnProperty("set_in_format")){
               for(key in items){
                 calculateMask(".item[data-name=\'" + items[key] + "\']");
@@ -212,6 +229,7 @@ var uploader = (settings) => {
 
             $(".item.selected").addClass("updated");
           }else{
+            $(trigger).attr("data-reset-val", values[Object.keys(values)[0]]);
             if(values.hasOwnProperty("format_id") || values.hasOwnProperty("set_in_format")) calculateMask(".item[data-name=\'" + items[0] + "\']");
             $(".item[data-name=\'" + items[0] + "\']").addClass("updated");
           }

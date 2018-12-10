@@ -120,7 +120,7 @@
         <div class="item-actions">
           <div class="action-group">
             <span class="title"><?php echo $text_paper_type; ?></span>
-            <select name="paper_type_id">
+            <select name="paper_type_id" data-reset-val="<?php echo $image['paper_type_id']; ?>">
               <?php foreach($paper_types as $type){ ?>
                 <?php if($type['id'] == $image['paper_type_id']){ ?>
                   <option value="<?php echo $type['id']; ?>" selected><?php echo $type['name']; ?></option>
@@ -132,7 +132,7 @@
           </div>
           <div class="action-group">
             <span class="title"><?php echo $text_format; ?></span>
-            <select name="format_id">
+            <select name="format_id" data-reset-val="<?php echo $image['format_id']; ?>">
               <?php foreach($formats as $format){ ?>
                 <?php if($format['id'] == $image['format_id']){ ?>
                   <option value="<?php echo $format['id']; ?>" selected><?php echo $format['name']; ?></option>
@@ -146,7 +146,7 @@
             <div class="action-group">
               <span class="title"><?php if(!empty($option['article'])){ ?><a href="<?php echo $option['article']['link']; ?>" target="_blank" rel="noopener"><?php } ?><?php echo $option['name']; ?><?php if(!empty($option['article'])){ ?></a><?php }?></span>
               <?php if($option['type'] == "select"){ ?>
-                <select name="option_<?php echo $option['id']; ?>">
+                <select name="option_<?php echo $option['id']; ?>" data-reset-val="<?php echo $image['options'][$option['id']]['value']; ?>">
                   <?php foreach($option['values'] as $val){ ?>
                     <?php if($val['id'] == $image['options'][$option['id']]['value']){ ?>
                       <option value="<?php echo $val['id']; ?>" selected><?php echo $val['text']; ?></option>
@@ -156,19 +156,19 @@
                   <?php }?>
                 </select>
               <?php }else if($option['type'] == "checkbox"){ ?>
-                <input type="checkbox" name="option_<?php echo $option['id']; ?>" <?php if(isset($image['options'][$option['id']])){ ?>checked<?php } ?>>
+                <input type="checkbox" name="option_<?php echo $option['id']; ?>" data-reset-val="<?php echo isset($image['options'][$option['id']])?1:0; ?>" <?php if(isset($image['options'][$option['id']])){ ?>checked<?php } ?>>
               <?php } ?>
             </div>
           <?php } ?>
           <div class="action-group">
             <span class="title"><?php echo $text_set_in_format; ?></span>
-            <input type="checkbox" name="set_in_format" <?php if($image['set_in_format'] == 1){ ?>checked<?php } ?>>
+            <input type="checkbox" name="set_in_format" data-reset-val="<?php echo $image['set_in_format']; ?>" <?php if($image['set_in_format'] == 1){ ?>checked<?php } ?>>
           </div>
           <div class="action-group">
             <span class="title"><?php echo $text_count; ?></span>
             <div class="count">
               <button data-type="minus" class="btn button-count">-</button>
-              <input type="text" name="copy_count" value="<?php echo isset($image['count'])?$image['count']:1; ?>">
+              <input type="text" name="copy_count" data-reset-val="<?php echo isset($image['count'])?$image['count']:1; ?>" value="<?php echo isset($image['count'])?$image['count']:1; ?>">
               <button data-type="plus" class="btn button-count">+</button>
             </div>
           </div>
@@ -278,7 +278,7 @@
   <div class="item-actions">
     <div class="action-group">
       <span class="title"><?php echo $text_paper_type; ?></span>
-      <select name="paper_type_id">
+      <select name="paper_type_id" data-reset-val="<%=paper_type_id%>">
         <?php foreach($paper_types as $type){ ?>
           <option value="<?php echo $type['id']; ?>" <% if(paper_type_id=='<?php echo $type['id']; ?>'){ %>selected<% } %>><?php echo $type['name']; ?></option>
         <?php }?>
@@ -286,7 +286,7 @@
     </div>
     <div class="action-group">
       <span class="title"><?php echo $text_format; ?></span>
-      <select name="format_id">
+      <select name="format_id" data-reset-val="<%=format_id%>">
         <?php foreach($formats as $format){ ?>
           <option value="<?php echo $format['id']; ?>" <% if(format_id=='<?php echo $format['id']; ?>'){ %>selected<% } %>><?php echo $format['name']; ?></option>
         <?php }?>
@@ -296,25 +296,25 @@
       <div class="action-group">
         <span class="title"><?php if(!empty($option['article'])){ ?><a href="<?php echo $option['article']['link']; ?>" target="_blank" rel="noopener"><?php } ?><?php echo $option['name']; ?><?php if(!empty($option['article'])){ ?></a><?php }?></span>
         <?php if($option['type'] == "select"){ ?>
-          <select name="option_<?php echo $option['id']; ?>">
+          <select name="option_<?php echo $option['id']; ?>" data-reset-val="<%=options['<?php echo $option['id']; ?>'].value%>">
             <?php foreach($option['values'] as $val){ ?>
               <option value="<?php echo $val['id']; ?>" <% if(options.hasOwnProperty('<?php echo $option['id']; ?>')){ %><% if(options['<?php echo $option['id']; ?>'].value=='<?php echo $val['id']; ?>'){ %>selected<% } %><% } %>><?php echo $val['text']; ?></option>
             <?php }?>
           </select>
         <?php }else if($option['type'] == "checkbox"){ ?>
-          <input type="checkbox" name="option_<?php echo $option['id']; ?>" <% if(options.hasOwnProperty('<?php echo $option['id']; ?>')){ %>checked<% } %>>
+          <input type="checkbox" name="option_<?php echo $option['id']; ?>" data-reset-val="<% if(options.hasOwnProperty('<?php echo $option['id']; ?>')){ %>1<% } %>" <% if(options.hasOwnProperty('<?php echo $option['id']; ?>')){ %>checked<% } %>>
         <?php } ?>
       </div>
     <?php } ?>
     <div class="action-group">
       <span class="title"><?php echo $text_set_in_format; ?></span>
-      <input type="checkbox" name="set_in_format" <% if(set_in_format==1){ %>checked<% } %>>
+      <input type="checkbox" name="set_in_format" data-reset-val="<%=set_in_format%>" <% if(set_in_format==1){ %>checked<% } %>>
     </div>
     <div class="action-group">
       <span class="title"><?php echo $text_count; ?></span>
       <div class="count">
         <button data-type="minus" class="btn button-count">-</button>
-        <input type="text" name="copy_count" value="<%=copy_count%>">
+        <input type="text" name="copy_count" data-reset-val="<%=copy_count%>" value="<%=copy_count%>">
         <button data-type="plus" class="btn button-count">+</button>
       </div>
     </div>
