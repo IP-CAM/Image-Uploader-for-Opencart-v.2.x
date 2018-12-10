@@ -432,7 +432,7 @@ var uploader = (settings) => {
   self.instagram.nextUrl = null;
 
   self.instagram.login  = () => {
-    window.location = "https://instagram.com/oauth/authorize/?client_id=d103bb3cf5c84baca2a28a5a502ec7be&redirect_uri=https://photoradost.loc/api/instagram.php&response_type=code";
+    window.location = "https://instagram.com/oauth/authorize/?client_id=d103bb3cf5c84baca2a28a5a502ec7be&redirect_uri=" + settings.serverRedirect + "api/instagram.php&response_type=code";
   };
 
   self.instagram.show = function(page = null) {
@@ -508,7 +508,7 @@ var uploader = (settings) => {
   self.facebook.more = 0;
 
   self.facebook.login  = function() {
-    window.location = "https://www.facebook.com/v3.2/dialog/oauth?client_id=1079984405513021&redirect_uri=https://photoradost.loc/api/facebook.php&response_type=code";
+    window.location = "https://www.facebook.com/v3.2/dialog/oauth?client_id=1079984405513021&redirect_uri=" + settings.serverRedirect + "api/facebook.php&response_type=code";
   };
 
   self.facebook.show = function() {

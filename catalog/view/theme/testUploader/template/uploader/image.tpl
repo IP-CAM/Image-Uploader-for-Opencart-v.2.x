@@ -356,8 +356,9 @@
 <script><!--
 uploader({
   uploaderType: "image",
-  allowedFormats: ["zip", "jpg", "jpeg", "png"],
-  ratio: <?php echo $ratio; ?>
+  allowedFormats: ["zip", "jpg", "gif", "png"],
+  ratio: <?php echo $ratio; ?>,
+  serverRedirect: "<?php echo $server_redirect; ?>"
 });
 --></script>
 <?php echo $footer; ?>

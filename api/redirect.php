@@ -1,4 +1,5 @@
 <?php
+require '../config.php';
 class Redirect{
   private $code = null;
   private $access_token = null;
@@ -14,9 +15,9 @@ class Redirect{
     if(!is_null($this->access_token)){
       $exp = is_null($this->expires_in)?3600 * 24 * 7:$this->expires_in;
       setcookie("a_" . $this->social_name, $this->access_token, time() + $exp, '/');
-      header("Location: https://photoradost.loc/index.php?route=module/image_uploader#" . $this->social_name);
+      header("Location: " . HTTPS_SERVER . "index.php?route=module/image_uploader#" . $this->social_name);
     }else{
-      header("Location: https://photoradost.loc/index.php?route=module/image_uploader");
+      header("Location: " . HTTPS_SERVER . "index.php?route=module/image_uploader");
     }
   }
 
@@ -36,9 +37,9 @@ class Redirect{
     if(!is_null($this->code)){
       $params = array(
         'fields' => array(
-          'client_id'     => '',
-          'client_secret' => '',
-          'redirect_uri'  => "https://photoradost.loc/api/" . $this->social_name . ".php",
+          'client_id'     => FACEBOOK_CLIENT_ID,
+          'client_secret' => FACEBOOK_SECRET,
+          'redirect_uri'  => HTTPS_SERVER . "api/" . $this->social_name . ".php",
           'code'          => $this->code
         ),
         'url' => 'https://graph.facebook.com/v3.2/oauth/access_token',
@@ -69,10 +70,10 @@ class Redirect{
     if(!is_null($this->code)){
       $params = array(
         'fields' => array(
-          'client_id'     => '',
-          'client_secret' => '',
+          'client_id'     => INSTAGRAM_CLIENT_ID,
+          'client_secret' => INSTAGRAM_SECRET,
           'grant_type'    => 'authorization_code',
-          'redirect_uri'  => "https://photoradost.loc/api/" . $this->social_name . ".php",
+          'redirect_uri'  => HTTPS_SERVER . "api/" . $this->social_name . ".php",
           'code'          => $this->code
         ),
         'url' => 'https://api.instagram.com/oauth/access_token',

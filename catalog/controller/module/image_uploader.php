@@ -128,6 +128,7 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['text_conform'] = $this->language->get('text_conform');
     $this->data['text_load_more'] = $this->language->get('text_load_more');
     $this->data['text_loading'] = $this->language->get('text_loading');
+    $this->data['server_redirect'] = HTTPS_SERVER;
 
     $this->children = array(
       'common/column_left',
