@@ -9,6 +9,7 @@ var uploader = (settings) => {
   var ratio = {};
   var selectedItemsCount = 0;
   var selectedItems = null;
+  var onlineTrigger = true;
 
   //generate template
   self.template = (templateName, data) => {
@@ -83,7 +84,8 @@ var uploader = (settings) => {
   //error
   self.error = function(data) {
     var message = $('<div class="uploader-error_message"><span class="message-text">' + data + '</span><button class="remove-message"><i class="fas fa-times"></i></button></div>');
-    $(".uploader-error").append(message);
+    $(".uploader-error").empty();
+    $(".uploader-error").html(message);
 
     $(message).find(".remove-message").on("click", () => {
       message.fadeOut(300, function(){$(this).remove()});
@@ -129,7 +131,7 @@ var uploader = (settings) => {
       dataType: "json",
       data: {"items":encodeURIComponent(JSON.stringify(items))},
       beforeSend: () => {
-        if(!window.navigator.onLine){
+        if(!onlineTrigger){
           $(document).find(".item-controls_delete").attr("disabled", false);
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
         }
@@ -191,7 +193,7 @@ var uploader = (settings) => {
       dataType: "json",
       data: {"items":encodeURIComponent(JSON.stringify(items)), "values": encodeURIComponent(JSON.stringify(values))},
       beforeSend: () => {
-        if(!window.navigator.onLine){
+        if(!onlineTrigger){
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
         }
       },
@@ -237,7 +239,7 @@ var uploader = (settings) => {
       dataType: "json",
       data: "item=" + encodeURIComponent(item),
       beforeSend: () => {
-        if(window.navigator.onLine){
+        if(onlineTrigger){
           progressBar.show();
         }else{
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
@@ -366,7 +368,7 @@ var uploader = (settings) => {
         dataType: "json",
         data: "social_upload=" + encodeURIComponent(JSON.stringify(socialUpload)),
         beforeSend: () => {
-          if(window.navigator.onLine){
+          if(onlineTrigger){
             progressBar.show();
             itemsUploadWrap.find(".selected").removeClass("selected");
             itemsUploadWrap.find(".open").removeClass("open").addClass("ready-open");
@@ -441,7 +443,7 @@ var uploader = (settings) => {
       crossDomain:true,
       dataType: "jsonp",
       beforeSend: () => {
-        if(!window.navigator.onLine){
+        if(!onlineTrigger){
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
         }
       },
@@ -516,7 +518,7 @@ var uploader = (settings) => {
       crossDomain:true,
       dataType: "jsonp",
       beforeSend: () => {
-        if(!window.navigator.onLine){
+        if(!onlineTrigger){
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
         }
       },
@@ -601,7 +603,7 @@ var uploader = (settings) => {
         self.error("Файл \"" + filename + "\" не будет загружен. Поддерживаются форматы zip, png, jpg, jpeg!");
       },
       onChange: () => {
-        if(!window.navigator.onLine){
+        if(!onlineTrigger){
           progressBar.hide();
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
           return false;
@@ -754,6 +756,9 @@ var uploader = (settings) => {
       $("#instagram-loaded .items-container").empty();
       self.instagram.show();
     });
+
+    window.addEventListener ('online', () => onlineTrigger = true);
+    window.addEventListener ('offline', () => onlineTrigger = false);
   });
 
   return self;
