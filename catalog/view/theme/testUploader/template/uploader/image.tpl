@@ -1,8 +1,12 @@
 <?php echo $header; ?>
-
-<div class="items-loader"></div>
+<div class="items-loader">
+  <div class="items-loader-wrap">
+    <i class="fas fa-spinner fa-pulse icon-load"></i>
+    <span class="text-load"><?php echo $text_loading; ?></span>
+  </div>
+</div>
 <div id="uploaded-images" class="items">
-  <nav class="mass-change<?php if(empty($images)){ ?> unset<?php } ?> items-naw">
+  <nav class="mass-change unset">
     <div class="mass-change_action">
       <span class="title"><?php echo $text_paper_type; ?></span>
       <select name="paper_type_id">
@@ -44,7 +48,7 @@
         <button data-type="plus" class="btn button-count">+</button>
       </div>
     </div>
-    <div class="mass-change_controls unset">
+    <div class="mass-change_controls">
       <div class="selected-count">
         <span class="btn selected-count_text"><?php echo $text_selected_count; ?></span>
         <span class="btn selected-count_value">0</span>
@@ -52,23 +56,23 @@
       <button class="btn mass-delete"><?php echo $text_delete; ?></button>
       <button class="btn mass-submit"><?php echo $text_submit; ?></button>
     </div>
-    <div class="format-count-container <?php if(empty($images)){ ?>unset<?php } ?>">
-      <span class="title"><?php echo $text_multiplicity; ?></span>
-      <?php foreach($formats as $format) { ?>
-        <?php if($format['count'] > 0) { ?>
-          <div class="format-count_block" data-id="<?php echo $format['id']; ?>">
-            <span class="format-count_value"><?php echo $format['count']; ?></span>
-            <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
-          </div>
-        <?php }else{ ?>
-          <div class="format-count_block unset" data-id="<?php echo $format['id']; ?>">
-            <span class="format-count_value">0</span>
-            <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
-          </div>
-        <?php } ?>
-      <?php } ?>
-    </div>
   </nav>
+  <div class="format-count-container <?php if(empty($images)){ ?>unset<?php } ?>">
+    <span class="title"><?php echo $text_multiplicity; ?></span>
+    <?php foreach($formats as $format) { ?>
+      <?php if($format['count'] > 0) { ?>
+        <div class="format-count_block" data-id="<?php echo $format['id']; ?>">
+          <span class="format-count_value"><?php echo $format['count']; ?></span>
+          <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
+        </div>
+      <?php }else{ ?>
+        <div class="format-count_block unset" data-id="<?php echo $format['id']; ?>">
+          <span class="format-count_value">0</span>
+          <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
+        </div>
+      <?php } ?>
+    <?php } ?>
+  </div>
   <div class="uploader">
     <div class="upload-button">
       <label class="pc-upload thumbnail">
@@ -184,7 +188,7 @@
       </div>
       <div class="item">
         <span class="title"><?php echo $text_price; ?>:</span>
-        <span class="value value-full-price"><?php echo $total_price; ?><span>
+        <span class="value value-full-price"><?php echo $total_full_price; ?><span>
       </div>
       <div class="item">
         <span class="title"><?php echo $text_full_price; ?>:</span>
@@ -192,7 +196,7 @@
       </div>
     </div>
     <div class="confirm-box">
-      <button class="btn confirm"><?php echo $text_conform; ?></button>
+      <button class="btn confirm" <?php if(!$images){ ?>disabled<?php } ?>><?php echo $text_conform; ?></button>
     </div>
   </div>
 </div>
@@ -201,28 +205,26 @@
     <nav class="loaded-nav">
       <div class="loaded-title"><?php echo $text_inst_upload; ?></div>
       <div class="loaded-buttons">
-        <button class="btn reload"><i class="fas fa-sync-alt"></i></button>
         <button class="btn upload-selected"><?php echo $text_upload_selected; ?></button>
+        <button class="btn reload"><i class="fas fa-sync-alt"></i></button>
         <button class="btn close-loaded"><i class="fas fa-times"></i></button>
       </div>
     </nav>
     <ul class="items-container"></ul>
   </div>
-  <div class="cover"></div>
 </div>
 <div id="facebook-loaded" class="loaded unset">
   <div class="items-container-wrap">
     <nav class="loaded-nav">
       <div class="loaded-title"><?php echo $text_fb_upload; ?></div>
       <div class="loaded-buttons">
-        <button class="btn reload"><i class="fas fa-sync-alt"></i></button>
         <button class="btn upload-selected"><?php echo $text_upload_selected; ?></button>
+        <button class="btn reload"><i class="fas fa-sync-alt"></i></button>
         <button class="btn close-loaded"><i class="fas fa-times"></i></button>
       </div>
     </nav>
     <ul class="items-container"></ul>
   </div>
-  <div class="cover"></div>
 </div>
 <div class="uploader-error"></div>
 
@@ -296,11 +298,11 @@
         <?php if($option['type'] == "select"){ ?>
           <select name="option_<?php echo $option['id']; ?>">
             <?php foreach($option['values'] as $val){ ?>
-              <option value="<?php echo $val['id']; ?>" <% if(options['<?php echo $option['id']; ?>']!==undefined){ %><% if(options['<?php echo $option['id']; ?>'].value=='<?php echo $val['id']; ?>'){ %>selected<% } %><% } %>><?php echo $val['text']; ?></option>
+              <option value="<?php echo $val['id']; ?>" <% if(options.hasOwnProperty('<?php echo $option['id']; ?>')){ %><% if(options['<?php echo $option['id']; ?>'].value=='<?php echo $val['id']; ?>'){ %>selected<% } %><% } %>><?php echo $val['text']; ?></option>
             <?php }?>
           </select>
         <?php }else if($option['type'] == "checkbox"){ ?>
-          <input type="checkbox" name="option_<?php echo $option['id']; ?>" <% if(options['<?php echo $option['id']; ?>']!==undefined){ %>checked<% } %>>
+          <input type="checkbox" name="option_<?php echo $option['id']; ?>" <% if(options.hasOwnProperty('<?php echo $option['id']; ?>')){ %>checked<% } %>>
         <?php } ?>
       </div>
     <?php } ?>
@@ -338,8 +340,10 @@
 <% items.forEach(function(item){ %>
 <li class="social-album">
   <div class="social-album_header" data-page="<%=item.url%>">
-    <i class="fas fa-arrow-alt-circle-down social-album_header-icon"></i>
+    <i class="far fa-folder icon-closed"></i>
+    <i class="far fa-folder-open icon-open"></i>
     <span class="social-album_header-title"><%=item.name%></span>
+    <i class="fas fa-spinner fa-pulse album-loader"></i>
   </div>
   <ul class="social-album_content"></ul>
 </li>
@@ -352,7 +356,7 @@
 <script><!--
 uploader({
   uploaderType: "image",
-  allowedFormats: "application/zip, application/octet-stream, image/*",
+  allowedFormats: ["zip", "jpg", "jpeg", "png"],
   ratio: <?php echo $ratio; ?>
 });
 --></script>
