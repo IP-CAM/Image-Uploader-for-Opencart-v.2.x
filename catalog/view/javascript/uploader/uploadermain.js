@@ -1,58 +1,54 @@
 var uploader = (settings) => {
+
   var self = this;
-
-  var settingsUpload = {
-    rules: {
-      allowedFileTypes: settings.allowedFormats,
-    },
-    script: "index.php?route=module/" + settings.uploaderType + "_uploader/upload",
-    singleFileUploads: true
-  };
-
   var itemsWrap;
   var formatWrap;
   var total;
   var massChange;
+  var progress;
   var ratio = {};
   var selectedItemsCount = 0;
   var selectedItems = null;
 
+  //generate template
   self.template = (templateName, data) => {
     var template = _.template($("#" + templateName).html());
     return template(data);
   };
 
-  self.beforeUpload = (e, files) => {
-    //var fileName = files[0].name;
-    //progress[fileName] = 0;
-  }
-
-  self.inProgress = (e, state) => {
-    // var fileName = state.files[0].name;
-    // progress[fileName] = state.percentage;
-    // var el = document.querySelector("pre");
-    // el.innerHTML = JSON.stringify(progress, null, 2);
-  }
-
-  self.successUpload = (e, response) => {
-    var responseParsed = jQuery.parseJSON(response);
-    if(responseParsed["success"]){
-      var data = responseParsed.success.data,
-          uploaded = responseParsed.success.uploaded;
+  //upload callback
+  var successUpload = function(response) {
+    if(response.hasOwnProperty("success")){
+      var data = response.success.data,
+          uploaded = response.success.uploaded;
       uploaded.forEach((item, i) => {
         item.options = jQuery.parseJSON(item.options);
         itemsWrap.append(self.template("upload-item", item));
-        $(".item[data-name=\'" + item.name + "\']").find("img").on("load", () => {
-          calculateMask(".item[data-name=\'" + item.name + "\']");
-        });
+        $(".item[data-name=\'" + item.name + "\']").find("img").on("load", () => calculateMask(".item[data-name=\'" + item.name + "\']"));
       });
       self.update(data);
     }else{
       self.error(responseParsed.error);
     }
+  };
+
+  //preloader
+  var progressBar = {};
+
+  progressBar.show = function() {
+    $("body").css("overflow","hidden");
+    progress.addClass("loading");
   }
 
-  self.update = data => {
+  progressBar.hide = function() {
+    setTimeout(() => {
+      $("body").css("overflow","visible");
+      progress.removeClass("loading");
+    });
+  }
+
+  //update update prices && counts
+  self.update = function(data) {
     total.find(".value-count").text(data.total_count);
     total.find(".value-full-price").text(data.total_full_price);
     total.find(".value-price").text(data.total_price);
@@ -65,11 +61,11 @@ var uploader = (settings) => {
       itemsIsset = true;
     });
     if(itemsIsset) {
+      total.find(".confirm").attr("disabled", false);
       formatWrap.removeClass("unset");
-      massChange.removeClass("unset");
     }else{
+      total.find(".confirm").attr("disabled", true);
       formatWrap.addClass("unset");
-      massChange.addClass("unset");
     }
     $(".format-count_block").each((i, block) => {
       var item = $(block);
@@ -82,10 +78,11 @@ var uploader = (settings) => {
         if(!item.hasClass("unset")) item.addClass("unset");
       }
     });
-  }
+  };
 
-  self.error = data => {
-    var message = $('<div class="uploader-error_message"><span class="message-text">' + data + '</span><button class="remove-message"><i class="far fa-times-circle"></i></button></div>');
+  //error
+  self.error = function(data) {
+    var message = $('<div class="uploader-error_message"><span class="message-text">' + data + '</span><button class="remove-message"><i class="fas fa-times"></i></button></div>');
     $(".uploader-error").append(message);
 
     $(message).find(".remove-message").on("click", () => {
@@ -94,26 +91,28 @@ var uploader = (settings) => {
     setTimeout(() => {
       message.fadeOut(300, function(){$(this).remove()});
     }, 5000);
-  }
+  };
 
-  self.checkSelected = () => {
+  self.checkSelected = function() {
     var selected = itemsWrap.find(".item.selected");
     selectedItemsCount = selected.length;
     selectedItems = selected;
-    if(selectedItemsCount != 0) $(".mass-change_controls").removeClass("unset");
-    else $(".mass-change_controls").addClass("unset");
+    if(selectedItemsCount != 0) $(".mass-change").removeClass("unset");
+    else $(".mass-change").addClass("unset");
 
     $(".selected-count_value").html(selectedItemsCount);
 
     return selectedItemsCount;
-  }
+  };
 
-  self.deleteItem = trigger => {
+  //delete photo
+  self.deleteItem = function(trigger) {
     var items = {};
     if($(trigger).hasClass("mass-delete")){
       if(selectedItemsCount > 0){
         selectedItems.each((i, item) => {
           items[i] = $(item).attr("data-name");
+          $(item).find(".item-controls_delete").attr("disabled", true);
         });
       }else{
         self.error("Изображения не выбраны");
@@ -121,6 +120,7 @@ var uploader = (settings) => {
       }
     }else{
       items[0] = $(trigger).parent().parent().attr("data-name");
+      $(trigger).attr("disabled", true);
     }
 
     $.ajax({
@@ -128,7 +128,13 @@ var uploader = (settings) => {
       type: "post",
       dataType: "json",
       data: {"items":encodeURIComponent(JSON.stringify(items))},
-      success: (json) => {
+      beforeSend: () => {
+        if(!window.navigator.onLine){
+          $(document).find(".item-controls_delete").attr("disabled", false);
+          self.error("Проверьте подключение к интернету и попробуйте еще раз.");
+        }
+      },
+      success: json => {
         if(json['success']) {
           for(key in items){
             $(".item[data-name=\'" + items[key] + "\']").remove();
@@ -140,9 +146,10 @@ var uploader = (settings) => {
         }
       }
     });
-  }
+  };
 
-  self.updateItem = trigger => {
+  //update photo option value
+  self.updateItem = function(trigger) {
     var items = {}, values = {};
     if($(trigger).hasClass("mass-submit")){
       if(selectedItemsCount > 0){
@@ -176,15 +183,19 @@ var uploader = (settings) => {
         values[$(trigger).attr("name")] = $(trigger).val();
       else
         values[$(trigger).attr("name")] = $(trigger).prop("checked")?1:0;
-
-    }
+    };
 
     $.ajax({
       url: "index.php?route=module/" + settings.uploaderType + "_uploader/update",
       type: "post",
       dataType: "json",
       data: {"items":encodeURIComponent(JSON.stringify(items)), "values": encodeURIComponent(JSON.stringify(values))},
-      success: (json) => {
+      beforeSend: () => {
+        if(!window.navigator.onLine){
+          self.error("Проверьте подключение к интернету и попробуйте еще раз.");
+        }
+      },
+      success: json => {
         if(json['success']){
           if($(trigger).hasClass("mass-submit")){
             for(key in values){
@@ -214,9 +225,10 @@ var uploader = (settings) => {
         }
       }
     });
-  }
+  };
 
-  self.copyItem = trigger => {
+  //copy photo
+  self.copyItem = function(trigger) {
     var item = $(trigger).parent().parent().attr("data-name");
 
     $.ajax({
@@ -224,24 +236,31 @@ var uploader = (settings) => {
       type: "post",
       dataType: "json",
       data: "item=" + encodeURIComponent(item),
-      success: (json) => {
+      beforeSend: () => {
+        if(window.navigator.onLine){
+          progressBar.show();
+        }else{
+          self.error("Проверьте подключение к интернету и попробуйте еще раз.");
+        }
+      },
+      success: json => {
         if(json["success"]){
           var data = json.success.data,
               copy = json.success.copy;
           copy.options = jQuery.parseJSON(copy.options);
           itemsWrap.append(self.template("upload-item", copy));
           self.update(data);
-          $(".item[data-name=\'" + copy.name + "\']").find("img").on("load", () => {
-            calculateMask(".item[data-name=\'" + copy.name + "\']");
-          });
+          $(".item[data-name=\'" + copy.name + "\']").find("img").on("load", () => calculateMask(".item[data-name=\'" + copy.name + "\']"));
         }else{
           self.error(json['error']);
         }
+        progressBar.hide();
       }
     });
-  }
+  };
 
-  self.count = trigger => {
+  //change count photo copy
+  self.count = function(trigger) {
     var count = +$(trigger).parent().find("input").val();
     if($(trigger).attr("data-type") == "minus" && count > 1){
       $(trigger).parent().find("input").val(--count);
@@ -254,16 +273,17 @@ var uploader = (settings) => {
     }
   }
 
-  self.countChange = trigger => {
+  //count validation
+  self.countChange = function(trigger) {
     var count = +$(trigger).val().replace(/,/, '.');
     if(isNaN(count) || count <= 1){
       $(trigger).val(1);
     }else if(Number(count) === count && count % 1 !== 0){
       $(trigger).val(Math.floor(count));
     }
-  }
+  };
 
-  var calculateMask = item => {
+  var calculateMask = function(item) {
     $(item).find(".item-inner, img").css({
       "height": "auto",
       "width": "auto"
@@ -328,9 +348,10 @@ var uploader = (settings) => {
         "height": newHeight
       });
     }
-  }
+  };
 
-  self.uploadSelected = trigger => {
+  //upload selected social photo
+  self.uploadSelected = function(trigger) {
     var itemsUploadWrap = $(trigger).parent().parent().parent().parent();
         socialUpload = {};
 
@@ -344,7 +365,17 @@ var uploader = (settings) => {
         type: "post",
         dataType: "json",
         data: "social_upload=" + encodeURIComponent(JSON.stringify(socialUpload)),
-        success: (json) => {
+        beforeSend: () => {
+          if(window.navigator.onLine){
+            progressBar.show();
+            itemsUploadWrap.find(".selected").removeClass("selected");
+            itemsUploadWrap.find(".open").removeClass("open").addClass("ready-open");
+            itemsUploadWrap.addClass("unset");
+          }else{
+            self.error("Проверьте подключение к интернету и попробуйте еще раз.");
+          }
+        },
+        success: json => {
           if(json["success"]){
             var data = json.success.data,
                 uploaded = json.success.uploaded;
@@ -357,36 +388,34 @@ var uploader = (settings) => {
             });
 
             self.update(data);
-
-            itemsUploadWrap.find(".selected").removeClass("selected");
-            itemsUploadWrap.find(".open").removeClass("open").addClass("ready-open");
-            itemsUploadWrap.addClass("unset");
           }else{
             self.error(responseParsed.error);
           }
+          progressBar.hide();
         }
       });
     }else{
       self.error("Нет выбранных изображений");
     }
-  }
+  };
 
-  self.getCookie = name => {
+  self.getCookie = function(name) {
     var matches = document.cookie.match(new RegExp(
       "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
     ));
     return matches ? decodeURIComponent(matches[1]) : undefined;
-  }
+  };
 
+  //instagram old api
   self.instagram = {};
   self.instagram.accessToken = false;
   self.instagram.nextUrl = null;
 
   self.instagram.login  = () => {
     window.location = "https://instagram.com/oauth/authorize/?client_id=d103bb3cf5c84baca2a28a5a502ec7be&redirect_uri=https://photoradost.loc/api/instagram.php&response_type=code";
-  }
+  };
 
-  self.instagram.show = (page = null) => {
+  self.instagram.show = function(page = null) {
     if (!self.instagram.accessToken){
       self.instagram.login();
     }else{
@@ -395,22 +424,28 @@ var uploader = (settings) => {
         self.instagram.renderPhotos();
       }else{
         $("#instagram-loaded").removeClass("unset");
+        $("#instagram-loaded").find(".items-container").removeClass("load");
       }
     }
-  }
+  };
 
-  self.instagram.renderPhotos = () => {
+  self.instagram.renderPhotos = function() {
     $("#instagram-loaded").removeClass("unset");
     if(self.instagram.nextUrl){
       $("#instagram-loaded .items-container").find(".social-item_load-more").addClass("loading");
     }
     $.ajax({
       url: self.instagram.nextUrl || "https://api.instagram.com/v1/users/self/media/recent/",
-      data: {access_token: self.instagram.accessToken, count: 5},
+      data: {access_token: self.instagram.accessToken, count: 15},
       type: "GET",
-      crossDomain: true,
+      crossDomain:true,
       dataType: "jsonp",
-      success: function(photos){
+      beforeSend: () => {
+        if(!window.navigator.onLine){
+          self.error("Проверьте подключение к интернету и попробуйте еще раз.");
+        }
+      },
+      success: photos => {
         if(photos.hasOwnProperty("meta") && photos.meta.hasOwnProperty("code") && photos.meta.code == 200){
           var data = {items: []};
           var i, item;
@@ -434,7 +469,7 @@ var uploader = (settings) => {
             $("#instagram-loaded .items-container").append(self.template("load-more-button", photos.pagination));
           }
 
-          $("#instagram-loaded").find(".reload").removeClass("load");
+          $("#instagram-loaded").find(".items-container").removeClass("load");
 
           self.instagram.nextUrl = null;
         }else{
@@ -442,8 +477,9 @@ var uploader = (settings) => {
         }
       }
     });
-  }
+  };
 
+  //facebook
   self.facebook = {};
   self.facebook.accessToken = false;
   self.facebook.nextUrl = false;
@@ -451,11 +487,11 @@ var uploader = (settings) => {
   self.facebook.loadbox = null;
   self.facebook.more = 0;
 
-  self.facebook.login  = () => {
+  self.facebook.login  = function() {
     window.location = "https://www.facebook.com/v3.2/dialog/oauth?client_id=1079984405513021&redirect_uri=https://photoradost.loc/api/facebook.php&response_type=code";
-  }
+  };
 
-  self.facebook.show = () => {
+  self.facebook.show = function() {
     if (!self.facebook.accessToken && !self.facebook.userId){
       self.facebook.login();
     }else{
@@ -463,29 +499,35 @@ var uploader = (settings) => {
         self.facebook.render();
       }else{
         $("#facebook-loaded").removeClass("unset");
+        $("#instagram-loaded").find(".items-container").removeClass("load");
       }
     }
-  }
+  };
 
-  self.facebook.render = () => {
+  self.facebook.render = function() {
     $("#facebook-loaded").removeClass("unset");
     if(self.facebook.more == 1){
       self.facebook.loadbox.find(".social-item_load-more").addClass("loading");
     }
     $.ajax({
-      url: self.facebook.nextUrl || "https://graph.facebook.com/v3.2/" + self.facebook.userId + "/albums?limit=2",
+      url: self.facebook.nextUrl || "https://graph.facebook.com/v3.2/" + self.facebook.userId + "/albums?limit=15",
       data: {access_token: self.facebook.accessToken},
       type: "GET",
-      crossDomain: true,
+      crossDomain:true,
       dataType: "jsonp",
-      success: function(data){
+      beforeSend: () => {
+        if(!window.navigator.onLine){
+          self.error("Проверьте подключение к интернету и попробуйте еще раз.");
+        }
+      },
+      success: data => {
         if(!data.hasOwnProperty("error")){
           self.facebook["show" + self.facebook.content](data);
           if (data.hasOwnProperty("paging") && data.paging.hasOwnProperty("next")) {
             self.facebook.loadbox.append(self.template("load-more-button", data.paging));
           }
 
-          $("#facebook-loaded").find(".reload").removeClass("load");
+          $("#facebook-loaded").find(".items-container").removeClass("load");
 
           self.facebook.nextUrl = null;
         }else{
@@ -493,7 +535,7 @@ var uploader = (settings) => {
         }
       }
     });
-  }
+  };
 
   self.facebook.showPhotos = data => {
     var photos = {items: []};
@@ -511,14 +553,15 @@ var uploader = (settings) => {
     }
 
     self.facebook.loadbox.append(self.template("loaded-items", photos));
-  }
+    self.facebook.loadbox.parent().addClass("open").removeClass("load");
+  };
 
   self.facebook.showAlbums = data => {
     var albums = {items: []};
     var i, item;
     for (i in data.data) {
       albums.items.push({
-        url: "https://graph.facebook.com/v3.2/" + data.data[i].id + "/photos?limit=2&fields=images,id",
+        url: "https://graph.facebook.com/v3.2/" + data.data[i].id + "/photos?limit=15&fields=images,id",
         name: data.data[i].name
       });
     }
@@ -528,55 +571,48 @@ var uploader = (settings) => {
     }
 
     self.facebook.loadbox.append(self.template("loaded-albums", albums));
-  }
+  };
 
-  $(document).on("ready", () => {
-    itemsWrap = $("#uploaded-images .items-container");
-    formatWrap = $(".format-count-container");
-    total = $(".summary");
-    massChange = $(".mass-change");
+  $(document).on("ready", function() {
+    itemsWrap    = $("#uploaded-images .items-container");
+    formatWrap   = $(".format-count-container");
+    total        = $(".summary");
+    massChange   = $(".mass-change");
+    progress     = $(".items-loader");
 
     //mask init
     if(typeof settings.ratio != "undefined"){
-      itemsWrap.find(".item").each((i, item) => {
-        calculateMask(item);
-      });
+      itemsWrap.find(".item").each((i, item) => calculateMask(item));
     }
 
-    //upload
-    $(".file-upload").liteUploader(settingsUpload)
-    .on("lu:before", (e, files) => {self.beforeUpload(e, files)})
-    .on("lu:progress", (e, state) => {self.inProgress(e, state)})
-    .on("lu:success", (e, response) => {self.successUpload(e, response)});
+    //uploader init
+    var settingsUpload = {
+      button: $(".file-upload"),
+      dropzone: $(".drop-zone"),
+      dragClass: "active",
+      url: "index.php?route=module/" + settings.uploaderType + "_uploader/upload",
+      name: "files_upload",
+      multiple: true,
+      multipleSelect: true,
+      responseType: "json",
+      allowedExtensions: settings.allowedFormats,
+      maxSize: 1022976,
+      onExtError:(filename) => {
+        self.error("Файл \"" + filename + "\" не будет загружен. Поддерживаются форматы zip, png, jpg, jpeg!");
+      },
+      onChange: () => {
+        if(!window.navigator.onLine){
+          progressBar.hide();
+          self.error("Проверьте подключение к интернету и попробуйте еще раз.");
+          return false;
+        }
+      },
+      onSubmit: () => progressBar.show(),
+      onComplete: (filename, response) => successUpload(response),
+      onAllDone: () => progressBar.hide()
+    };
 
-    $(".drop-zone").liteUploader(settingsUpload)
-    .on("lu:before", (e, files) => {self.beforeUpload(e, files)})
-    .on("lu:progress", (e, state) => {self.inProgress(e, state)})
-    .on("lu:success", (e, response) => {self.successUpload(e, response)})
-    .on("drag dragstart dragend dragover dragenter dragleave drop", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-    })
-    .on("dragover dragenter", function () {
-      $(this).addClass("active");
-    })
-    .on("dragleave dragend drop", function () {
-      $(this).removeClass("active");
-    })
-    .on("drop", function(e) {
-      $(this).data("liteUploader").startUpload(e.originalEvent.dataTransfer.files);
-    });
-
-    $("body").on("dragover dragenter", function () {
-      $(".drop-zone").addClass("active");
-    })
-    .on("dragleave dragend drop", function () {
-      $(".drop-zone").removeClass("active");
-    })
-
-    $(".file-upload").on("change", function () {
-      $(this).data("liteUploader").startUpload();
-    });
+    var upload = new ss.SimpleUpload(settingsUpload);
 
     //copy, select, delete, change
     $(document).on("click", ".item-controls_delete, .mass-delete", function() {
@@ -587,25 +623,25 @@ var uploader = (settings) => {
       self.copyItem(this);
     });
 
-    $(document).on("click", ".item-controls_select", function(){
+    $(document).on("click", ".item-controls_select", function() {
       if($(this).parent().parent().hasClass("selected")) $(this).parent().parent().removeClass("selected");
       else $(this).parent().parent().addClass("selected");
       self.checkSelected();
     });
 
-    $(document).on("change", ".action-group input, .action-group select", function(){
+    $(document).on("change", ".action-group input, .action-group select", function() {
       self.updateItem(this);
     });
 
-    $(document).on("click", ".mass-submit", function(){
+    $(document).on("click", ".mass-submit", function() {
       self.updateItem(this);
     });
 
-    $(document).on("change", ".mass-change input[name=\'copy_count\']", function(){
+    $(document).on("change", ".mass-change input[name=\'copy_count\']", function() {
       self.countChange(this);
     });
 
-    $(document).on("click", ".button-count", function(){
+    $(document).on("click", ".button-count", function() {
       if(self.count(this)) $(this).parent().find("input").trigger("change");
     })
 
@@ -613,12 +649,17 @@ var uploader = (settings) => {
     self.instagram.accessToken = self.getCookie("a_instagram");
 
     if(window.location.hash == "#instagram"){
+      $("body").css("overflow","hidden");
+      $("#instagram-loaded").find(".items-container").addClass("load");
+      $("body").css("overflow","hidden");
       self.instagram.show();
       history.pushState("", document.title, window.location.href.substr(0, window.location.href.indexOf('#')));
     }
 
-    $(document).on("click", ".inst-upload", function(e){
+    $(document).on("click", ".inst-upload", function(e) {
       e.preventDefault();
+      $("#instagram-loaded").find(".items-container").addClass("load");
+      $("body").css("overflow","hidden");
       self.instagram.show();
     });
 
@@ -633,17 +674,21 @@ var uploader = (settings) => {
 
     if(window.location.hash == "#facebook"){
       self.facebook.content = "Albums";
+      $("#facebook-loaded").find(".items-container").addClass("load");
+      $("body").css("overflow","hidden");
       self.facebook.show();
       history.pushState("", document.title, window.location.href.substr(0, window.location.href.indexOf('#')));
     }
 
-    $(document).on("click", ".fb-upload", function(e){
+    $(document).on("click", ".fb-upload", function(e) {
       e.preventDefault();
       self.facebook.content = "Albums";
+      $("#facebook-loaded").find(".items-container").addClass("load");
+      $("body").css("overflow","hidden");
       self.facebook.show();
     });
 
-    $(document).on("click", "#facebook-loaded .social-album .social-album_header", function(){
+    $(document).on("click", "#facebook-loaded .social-album .social-album_header", function() {
       if($(this).parent().hasClass("open")){
         $(this).parent().removeClass("open").addClass("ready-open");
       }else{
@@ -653,13 +698,13 @@ var uploader = (settings) => {
           self.facebook.nextUrl = $(this).attr("data-page");
           self.facebook.loadbox = $(this).parent().find(".social-album_content");
           self.facebook.content = "Photos";
+          $(this).parent().addClass("load");
           self.facebook.show();
-          $(this).parent().addClass("open");
         }
       }
     });
 
-    $(document).on("click", "#facebook-loaded .social-item_load-more", function(){
+    $(document).on("click", "#facebook-loaded .social-item_load-more", function() {
       self.facebook.nextUrl = $(this).find(".load-more").attr("data-page");
       self.facebook.loadbox = $(this).parent();
       if($(this).parent().hasClass("items-container"))
@@ -671,23 +716,33 @@ var uploader = (settings) => {
     });
 
     //social navigatiuon buttons
-    $(".loaded-buttons .close-loaded").on("click", function(){
+    $(document).on("click", ".loaded", function(e) {
+      if($(".loaded").has(e.target).length === 0){
+        var wrap = $(this).find(".items-container-wrap");
+        wrap.parent().addClass("unset");
+        wrap.find(".open").removeClass("open").addClass("ready-open");
+        $("body").css("overflow","visible");
+      }
+    });
+
+    $(document).on("click", ".close-loaded", function(e) {
       var wrap = $(this).parent().parent().parent();
       wrap.parent().addClass("unset");
       wrap.find(".open").removeClass("open").addClass("ready-open");
+      $("body").css("overflow","visible");
     });
 
-    $(document).on("click", ".social-item", function(){
+    $(document).on("click", ".social-item", function() {
       if($(this).hasClass("selected")) $(this).removeClass("selected");
       else $(this).addClass("selected");
     });
 
-    $(".loaded-buttons .upload-selected").on("click", function(){
+    $(".loaded-buttons .upload-selected").on("click", function() {
       self.uploadSelected(this);
     });
 
-    $("#facebook-loaded .loaded-buttons .reload").on("click", function(){
-      $(this).addClass("load");
+    $("#facebook-loaded .loaded-buttons .reload").on("click", function() {
+      $(this).parent().parent().parent().find(".items-container").addClass("load");
       self.facebook.loadbox = $('#facebook-loaded .items-container');
       self.facebook.content = "Albums";
       self.facebook.loadbox.empty();
@@ -695,7 +750,7 @@ var uploader = (settings) => {
     });
 
     $("#instagram-loaded .loaded-buttons .reload").on("click", function(){
-      $(this).addClass("load");
+      $(this).parent().parent().parent().find(".items-container").addClass("load");
       $("#instagram-loaded .items-container").empty();
       self.instagram.show();
     });
