@@ -6,7 +6,8 @@ class ControllerModuleImageUploader extends Controller{
   public function index(){
     $this->load->model('module/uploader');
     $this->load->language('module/uploader');
-    $this->document->addScript("catalog/view/javascript/uploader/liteuploader.js");
+    // $this->document->addScript("catalog/view/javascript/uploader/liteuploader.js");
+    $this->document->addScript("catalog/view/javascript/uploader/SimpleAjaxUploader.min.js");
     $this->document->addScript("https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js");
     $this->document->addScript("catalog/view/javascript/uploader/uploadermain.js");
     $this->document->addStyle("catalog/view/theme/testUploader/stylesheet/uploader.css");
@@ -126,6 +127,7 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['text_full_price'] = $this->language->get('text_full_price');
     $this->data['text_conform'] = $this->language->get('text_conform');
     $this->data['text_load_more'] = $this->language->get('text_load_more');
+    $this->data['text_loading'] = $this->language->get('text_loading');
 
     $this->children = array(
       'common/column_left',
@@ -375,9 +377,8 @@ class ControllerModuleImageUploader extends Controller{
             @mkdir(DIR_IMAGE . "uploader_tmp/", 0777);
         }
 
-        if(isset($this->request->files['file_upload'])){
-          $file_upload = $this->request->files['file_upload'];
-
+        if(isset($this->request->files['files_upload'])){
+          $file_upload = $this->request->files['files_upload'];
           if(strpos($file_upload['type'], "image") !== false){
             $tmp_image = array(
               'session_id' => $session_id,
@@ -419,7 +420,7 @@ class ControllerModuleImageUploader extends Controller{
                     $filesize = filesize($zip_path . $image);
                     $tmp_image = array(
                       'session_id' => $session_id,
-                      'name' => md5($tmp_image . date("j, n, Y H:i") . random_bytes(5)),
+                      'name' => md5($image . date("j, n, Y H:i") . random_bytes(5)),
                       'path' => $this->saveImage(array('name' => $image, 'copy_name' => $zip_path . $image), $session_id),
                       'base' => $this->baseImage(),
                       'format_id' => $default['format']['id'],
