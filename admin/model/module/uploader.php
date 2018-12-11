@@ -6,7 +6,8 @@ class ModelModuleUploader extends Model {
     CREATE TABLE `" . DB_PREFIX . "uploader_count_paper` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `name` int(11) NOT NULL,
-      `uploader_type` int(1) NOT NULL DEFAULT '0'
+      `uploader_type` int(1) NOT NULL DEFAULT '0',
+      PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");
 
@@ -19,7 +20,8 @@ class ModelModuleUploader extends Model {
       `normal` float NOT NULL,
       `good` float NOT NULL,
       `default_value` int(1) NOT NULL DEFAULT '0',
-      `sort` int(11) NOT NULL DEFAULT '0'
+      `sort` int(11) NOT NULL DEFAULT '0',
+      PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");
 
@@ -37,7 +39,8 @@ class ModelModuleUploader extends Model {
       `options` json NOT NULL,
       `copy_count` int(11) NOT NULL,
       `size` int(11) NOT NULL,
-      `date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP
+      `date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");
 
@@ -47,7 +50,8 @@ class ModelModuleUploader extends Model {
       `name` varchar(150) NOT NULL,
       `type` enum('select','checkbox') NOT NULL,
       `article_id` int(11) NOT NULL,
-      `uploader_type` int(1) NOT NULL
+      `uploader_type` int(1) NOT NULL,
+      PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");
 
@@ -57,7 +61,8 @@ class ModelModuleUploader extends Model {
       `option_id` int(11) NOT NULL,
       `text` varchar(150) NOT NULL,
       `default_value` int(1) NOT NULL DEFAULT '0',
-      `sort` int(11) NOT NULL DEFAULT '0'
+      `sort` int(11) NOT NULL DEFAULT '0',
+      PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");
 
@@ -67,7 +72,8 @@ class ModelModuleUploader extends Model {
       `name` varchar(100) NOT NULL,
       `default_value` int(1) NOT NULL DEFAULT '0',
       `sort` int(11) NOT NULL DEFAULT '0',
-      `uploader_type` int(1) NOT NULL DEFAULT '0'
+      `uploader_type` int(1) NOT NULL DEFAULT '0',
+      PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");
 
@@ -77,7 +83,8 @@ class ModelModuleUploader extends Model {
       `key_text` varchar(80) NOT NULL,
       `format_id` int(11) DEFAULT NULL,
       `count_paper_id` int(11) DEFAULT NULL,
-      `price` float NOT NULL
+      `price` float NOT NULL,
+      PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");
 
@@ -108,15 +115,10 @@ class ModelModuleUploader extends Model {
   }
 
   public function remove(){
-    $this->db->query("DROP TABLE `" . DB_PREFIX . "uploader_count_paper`");
-    $this->db->query("DROP TABLE `" . DB_PREFIX . "uploader_format`");
-    $this->db->query("DROP TABLE `" . DB_PREFIX . "uploader_image`");
-    $this->db->query("DROP TABLE `" . DB_PREFIX . "uploader_option`");
-    $this->db->query("DROP TABLE `" . DB_PREFIX . "uploader_option_value`");
-    $this->db->query("DROP TABLE `" . DB_PREFIX . "uploader_paper_type`");
-    $this->db->query("DROP TABLE `" . DB_PREFIX . "uploader_price`");
-    $this->db->query("DELETE FROM `" . DB_PREFIX . "url_alias` WHERE `query` = 'module/image_uploader'");
-    $this->db->query("DELETE FROM `" . DB_PREFIX . "url_alias` WHERE `query` = 'module/document_uploader'");
+    $this->db->query("DROP TABLE " . DB_PREFIX . "uploader_image, " . DB_PREFIX . "uploader_option_value, " . DB_PREFIX . "uploader_paper_type, " . DB_PREFIX . "uploader_price");
+    $this->db->query("DROP TABLE " . DB_PREFIX . "uploader_count_paper, " . DB_PREFIX . "uploader_format, " . DB_PREFIX . "uploader_option");
+    $this->db->query("DELETE FROM " . DB_PREFIX . "url_alias WHERE query = 'module/image_uploader'");
+    $this->db->query("DELETE FROM " . DB_PREFIX . "url_alias WHERE query = 'module/document_uploader'");
   }
 
   public function setFormat($data){
