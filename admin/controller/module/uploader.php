@@ -2,6 +2,18 @@
 class ControllerModuleUploader extends Controller {
 	private $error = array();
 
+	public function install(){
+		$this->load->model('module/uploader');
+		$this->model_module_uploader->install();
+		$this->cache->delete('seo_pro');
+	}
+
+	public function uninstall(){
+		$this->load->model('module/uploader');
+		$this->model_module_uploader->remove();
+		$this->cache->delete('seo_pro');
+	}
+
   public function index(){
     $this->load->language('module/uploader');
     $this->data['heading_title'] = $this->language->get('heading_title');
