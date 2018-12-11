@@ -296,7 +296,7 @@
       <div class="action-group">
         <span class="title"><?php if(!empty($option['article'])){ ?><a href="<?php echo $option['article']['link']; ?>" target="_blank" rel="noopener"><?php } ?><?php echo $option['name']; ?><?php if(!empty($option['article'])){ ?></a><?php }?></span>
         <?php if($option['type'] == "select"){ ?>
-          <select name="option_<?php echo $option['id']; ?>" data-reset-val="<%=options['<?php echo $option['id']; ?>'].value%>">
+          <select name="option_<?php echo $option['id']; ?>" data-reset-val="<% if(options.hasOwnProperty('<?php echo $option['id']; ?>')){ %><%=options['<?php echo $option['id']; ?>'].value%><% } %>">
             <?php foreach($option['values'] as $val){ ?>
               <option value="<?php echo $val['id']; ?>" <% if(options.hasOwnProperty('<?php echo $option['id']; ?>')){ %><% if(options['<?php echo $option['id']; ?>'].value=='<?php echo $val['id']; ?>'){ %>selected<% } %><% } %>><?php echo $val['text']; ?></option>
             <?php }?>

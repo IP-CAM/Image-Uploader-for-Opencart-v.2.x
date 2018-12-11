@@ -239,21 +239,31 @@ class ControllerModuleImageUploader extends Controller{
   }
 
   private function saveImage($file_upload, $session_id){
+    $images = array();
     $file_type = substr($file_upload['name'], strrpos($file_upload['name'], '.') + 1);
     if(!file_exists(DIR_IMAGE . "uploader_tmp/" . $session_id . "/")){
       @mkdir(DIR_IMAGE . "uploader_tmp/" . $session_id . "/", 0777);
     }
-    $image_path = DIR_IMAGE . "uploader_tmp/" . $session_id . "/" . md5($file_upload['name'] . random_bytes(5)) . "." . $file_type;
+    $image_name = md5($file_upload['name'] . random_bytes(5));
+    $images['path'] = DIR_IMAGE . "uploader_tmp/" . $session_id . "/" . $image_name . "." . $file_type;
     if(isset($file_upload['tmp_name'])){
-      move_uploaded_file($file_upload['tmp_name'], $image_path);
+      move_uploaded_file($file_upload['tmp_name'], $images['path']);
     }else if(isset($file_upload['copy_name'])){
-      copy($file_upload['copy_name'], $image_path);
+      copy($file_upload['copy_name'], $images['path']);
     }else if(isset($file_upload['social_name'])){
-      file_put_contents($image_path, $this->getTarget($file_upload['social_name']));
-      //var_dump($this->getTarget($file_upload['social_name']));
+      file_put_contents($images['path'], $this->getTarget($file_upload['social_name']));
     }
-    $this->load($image_path);
-    return $image_path;
+    $this->load($images['path']);
+    $this->scale(260);
+
+    if(!file_exists(DIR_IMAGE . "uploader_base/" . $session_id . "/")){
+      @mkdir(DIR_IMAGE . "uploader_base/" . $session_id . "/", 0777);
+    }
+    $images['base_path'] = DIR_IMAGE . "uploader_base/" . $session_id . "/" . $image_name . "." . $file_type;
+    $this->output($images['base_path']);
+    $images['base'] = HTTPS_IMAGE . "uploader_base/" . $session_id . "/" . $image_name . "." . $file_type;
+
+    return $images;
   }
 
   private function getTarget($url){
@@ -308,23 +318,14 @@ class ControllerModuleImageUploader extends Controller{
     $this->image = $new_image;
   }
 
-  function output() {
+  function output($to) {
     if($this->image_type == "image/jpeg") {
-       imagejpeg($this->image);
+       imagejpeg($this->image, $to);
     }else if($this->image_type == "image/gif") {
-       imagegif($this->image);
+       imagegif($this->image, $to);
     }else if($this->image_type == "image/png") {
-       imagepng($this->image);
+       imagepng($this->image, $to);
     }
-  }
-
-  private function baseImage(){
-    $this->scale(260);
-    ob_start();
-      $this->output();
-      $data = ob_get_contents();
-    ob_end_clean();
-    return 'data:' . $this->image_type . ';base64,' . base64_encode($data);
   }
 
   private function removeDirectory($dir) {
@@ -375,17 +376,22 @@ class ControllerModuleImageUploader extends Controller{
         $session_id = hash("sha256", $uis);
         $upload_images = array();
         if(!file_exists(DIR_IMAGE . "uploader_tmp/")){
-            @mkdir(DIR_IMAGE . "uploader_tmp/", 0777);
+          @mkdir(DIR_IMAGE . "uploader_tmp/", 0777);
+        }
+        if(!file_exists(DIR_IMAGE . "uploader_base/")){
+          @mkdir(DIR_IMAGE . "uploader_base/", 0777);
         }
 
         if(isset($this->request->files['files_upload'])){
           $file_upload = $this->request->files['files_upload'];
           if(strpos($file_upload['type'], "image") !== false){
+            $images_saved = $this->saveImage($file_upload, $session_id);
             $tmp_image = array(
               'session_id' => $session_id,
               'name' => md5($file_upload['name'] . date("j, n, Y H:i") . random_bytes(5)),
-              'path' => $this->saveImage($file_upload, $session_id),
-              'base' => $this->baseImage(),
+              'path' => $images_saved['path'],
+              'base_path' => $images_saved['base_path'],
+              'base' => $images_saved['base'],
               'format_id' => $default['format']['id'],
               'paper_type_id' => $default['paper_type']['id'],
               'set_in_format' => 0,
@@ -419,11 +425,13 @@ class ControllerModuleImageUploader extends Controller{
                 if(is_array($images)){
                   foreach($images as $image){
                     $filesize = filesize($zip_path . $image);
+                    $images_saved = $this->saveImage(array('name' => $image, 'copy_name' => $zip_path . $image), $session_id);
                     $tmp_image = array(
                       'session_id' => $session_id,
                       'name' => md5($image . date("j, n, Y H:i") . random_bytes(5)),
-                      'path' => $this->saveImage(array('name' => $image, 'copy_name' => $zip_path . $image), $session_id),
-                      'base' => $this->baseImage(),
+                      'path' => $images_saved['path'],
+                      'base_path' => $images_saved['base_path'],
+                      'base' => $images_saved['base'],
                       'format_id' => $default['format']['id'],
                       'paper_type_id' => $default['paper_type']['id'],
                       'set_in_format' => 0,
@@ -450,11 +458,14 @@ class ControllerModuleImageUploader extends Controller{
         }else if(isset($this->request->post['social_upload'])){
            $social_upload = json_decode(html_entity_decode(urldecode($this->request->post['social_upload'])), true);
            foreach($social_upload as $social_image){
+             $image_name = md5($social_image . date("j, n, Y H:i") . random_bytes(5));
+             $images_saved = $this->saveImage(array('name' => md5(random_bytes(10)) . '.jpg', 'social_name' => $social_image), $session_id);
              $tmp_image = array(
                'session_id' => $session_id,
-               'name' => md5($social_image . date("j, n, Y H:i") . random_bytes(5)),
-               'path' => $this->saveImage(array('name' => md5(random_bytes(10)) . '.jpg', 'social_name' => $social_image), $session_id),
-               'base' => $this->baseImage(),
+               'name' => $image_name,
+               'path' => $images_saved['path'],
+               'base_path' => $images_saved['base_path'],
+               'base' => $images_saved['base'],
                'format_id' => $default['format']['id'],
                'paper_type_id' => $default['paper_type']['id'],
                'set_in_format' => 0,
@@ -505,13 +516,12 @@ class ControllerModuleImageUploader extends Controller{
         $session_id = hash("sha256", $uis);
         $images = json_decode(html_entity_decode(urldecode($this->request->post['items'])), true);
         foreach($images as $image){
-          $path = $this->model_module_uploader->deleteImage($image, $session_id);
-          if(file_exists($path)){
-            if(!unlink($path)){
-              $json['error'] = $this->language->get('error_image_delete');
-            }
-          }else{
-            $json['error'] = $this->language->get('error_image_exists');
+          $results = $this->model_module_uploader->deleteImage($image, $session_id);
+          try{
+            unlink($results['path']);
+            unlink($results['base_path']);
+          }catch(Exception $e){
+            $json['error'] = $this->language->get('error_image_exists') . " " . $e->getMessage();
           }
         }
       }
@@ -594,21 +604,32 @@ class ControllerModuleImageUploader extends Controller{
         $name = urldecode($this->request->post['item']);
         $image = $this->model_module_uploader->getImage($name, $session_id);
         $image['name'] = md5($image['name'] . date("j, n, Y H:i") . random_bytes(5));
-        if(file_exists($image['path'])){
+        try{
           $path = substr($image['path'], 0, strrpos($image['path'], '/'));
+          $base_path = substr($image['base_path'], 0, strrpos($image['base_path'], '/'));
 
           $file = explode('.', strrchr($image['path'], '/'));
-          $path .= "/" . md5($file[0] . random_bytes(5)) . "." . $file[1];
+          $new_file = "/" . md5($file[0] . random_bytes(5)) . "." . $file[1];
+
+          $path .= $new_file;
+          $base_path .= $new_file;
+
           $old = umask(0);
           copy($image['path'], $path);
+          copy($image['base_path'], $base_path);
           umask($old);
+
           $image['path'] = $path;
+          $image['base_path'] = $base_path;
+          $image['base'] = str_replace(DIR_IMAGE, HTTPS_IMAGE, $base_path);
+
           $this->model_module_uploader->addImage($image);
-          unset($image['id'], $image['session_id'], $image['path'], $image['size'], $image['date']);
+          unset($image['id'], $image['session_id'], $image['path'], $image['size'], $image['date'], $image['base_path']);
+
           $json['success']['copy']= $image;
           $json['success']['data'] = $this->getData($session_id);
-        }else{
-          $json['error'] = $this->language->get('error_image_exists');
+        }catch(Exception $e){
+          $json['error'] = $this->language->get('error_copy') . " " . $e->getMessage();
         }
       }
     }

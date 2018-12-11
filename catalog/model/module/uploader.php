@@ -10,11 +10,12 @@ class ModelModuleUploader extends Model{
   }
 
   public function addImage($data){
-    $sql = "INSERT INTO " . DB_PREFIX . "uploader_image (name, session_id, path, base, format_id, paper_type_id, set_in_format, options, copy_count, size, date) ";
+    $sql = "INSERT INTO " . DB_PREFIX . "uploader_image (name, session_id, path, base, base_path, format_id, paper_type_id, set_in_format, options, copy_count, size, date) ";
     $sql .= "VALUES ('" . $this->db->escape($data['name']) . "',";
     $sql .= " '" . $this->db->escape($data['session_id']) . "',";
     $sql .= " '" . $this->db->escape($data['path']) . "',";
     $sql .= " '" . $this->db->escape($data['base']) . "',";
+    $sql .= " '" . $this->db->escape($data['base_path']) . "',";
     $sql .= " '" . (int)$data['format_id'] . "',";
     $sql .= " '" . (int)$data['paper_type_id'] . "',";
     $sql .= " '" . (isset($data['set_in_format'])?(int)$data['set_in_format']:0) . "',";
@@ -35,9 +36,9 @@ class ModelModuleUploader extends Model{
   }
 
   public function deleteImage($name, $id_session){
-    $result = $this->db->query("SELECT path FROM " . DB_PREFIX . "uploader_image WHERE name = '" . $this->db->escape($name) . "' AND session_id = '" . $this->db->escape($id_session) . "'");
+    $result = $this->db->query("SELECT path, base_path FROM " . DB_PREFIX . "uploader_image WHERE name = '" . $this->db->escape($name) . "' AND session_id = '" . $this->db->escape($id_session) . "'");
     $this->db->query("DELETE FROM " . DB_PREFIX . "uploader_image WHERE name = '" . $this->db->escape($name) . "' AND session_id = '" . $this->db->escape($id_session) . "'");
-    return isset($result->row['path'])?$result->row['path']:0;
+    return $result->row;
   }
 
   public function getDefault($uploader_type){

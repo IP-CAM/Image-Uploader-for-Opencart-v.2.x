@@ -12,7 +12,7 @@ var uploader = (settings) => {
   var onlineTrigger = true;
 
   //generate template
-  self.template = (templateName, data) => {
+  self.template = function(templateName, data) {
     var template = _.template($("#" + templateName).html());
     return template(data);
   };
@@ -37,11 +37,13 @@ var uploader = (settings) => {
     if(response.hasOwnProperty("success")){
       var data = response.success.data,
           uploaded = response.success.uploaded;
+
       uploaded.forEach((item, i) => {
         item.options = jQuery.parseJSON(item.options);
         itemsWrap.append(self.template("upload-item", item));
         $(".item[data-name=\'" + item.name + "\']").find("img").on("load", () => calculateMask(".item[data-name=\'" + item.name + "\']"));
       });
+
       self.update(data);
     }else{
       self.error(responseParsed.error);
