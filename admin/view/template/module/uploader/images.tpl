@@ -1,9 +1,55 @@
 <div class="tab-box_second">
-  <form action="index.php?route=module/uploader/saveLink&token=<?php echo $token; ?>" method="post">
+  <form action="index.php?route=module/uploader/socialSettings&token=<?php echo $token; ?>" method="post">
     <div class="box-group">
       <label for="link"><?php echo $text_link; ?></label>
       <?php echo $text_link_pl; ?>
       <input type="hidden" name="type" value="image">
+    </div>
+    <hr><br>
+    <label class="box-group">
+      <?php echo $text_facebook; ?>
+      <input type="text" name="facebook_client_id" placeholder="1079984405513021" value="<?php echo $facebook_client_id; ?>">
+    </label>
+    <label class="box-group">
+      <?php echo $text_social_limit_photo; ?>
+      <input type="text" name="facebook_photos_limit" placeholder="15" value="<?php echo $facebook_photos_limit; ?>">
+    </label>
+    <label class="box-group">
+      <?php echo $text_social_limit_albums; ?>
+      <input type="text" name="facebook_albums_limit" placeholder="15" value="<?php echo $facebook_albums_limit; ?>">
+    </label>
+    <label class="box-group">
+      <?php echo $text_instagram; ?>
+      <input type="text" name="instagram_client_id" placeholder="d103bb3cf5c84baca2a28a5a502ec7be" value="<?php echo $instagram_client_id; ?>">
+    </label>
+    <label class="box-group">
+      <?php echo $text_social_limit_photo; ?>
+      <input type="text" name="instagram_photos_limit" placeholder="15" value="<?php echo $instagram_photos_limit; ?>">
+    </label>
+    <div class="box-group">
+      <label><?php echo $text_social_allowed_formats; ?></label>
+      <label>
+        <?php echo $text_social_allowed_formats_jpg; ?>
+        <input type="checkbox" checked="checked" disabled>
+        <input type="hidden" name="image_allowed_formats[jpg]" value="jpg" checked="checked">
+      </label>
+      <label>
+        <?php echo $text_social_allowed_formats_png; ?>
+        <input type="checkbox" checked="checked" disabled>
+        <input type="hidden" name="image_allowed_formats[png]" value="png" checked="checked">
+      </label>
+      <label>
+        <?php echo $text_social_allowed_formats_gif; ?>
+        <input type="checkbox" name="image_allowed_formats[gif]" value="gif" <?php if(isset($image_allowed_formats['gif'])){ ?>checked="checked"<?php } ?>>
+      </label>
+      <label>
+        <?php echo $text_social_allowed_formats_rar; ?>
+        <input type="checkbox" name="image_allowed_formats[rar]" value="rar" <?php if(isset($image_allowed_formats['rar'])){ ?>checked="checked"<?php } ?>>
+      </label>
+      <label>
+        <?php echo $text_social_allowed_formats_zip; ?>
+        <input type="checkbox" name="image_allowed_formats[zip]" value="zip" <?php if(isset($image_allowed_formats['zip'])){ ?>checked="checked"<?php } ?>>
+      </label>
     </div>
     <a class="button save"><?php echo $button_save; ?></a>
   </form>

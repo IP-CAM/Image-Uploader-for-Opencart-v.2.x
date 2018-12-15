@@ -6,9 +6,15 @@ class ControllerModuleImageUploader extends Controller{
   public function index(){
     $this->load->model('module/uploader');
     $this->load->language('module/uploader');
-    // $this->document->addScript("catalog/view/javascript/uploader/liteuploader.js");
+
+    $this->data['instagram_client_id'] = $this->config->get('instagram_client_id');
+    $this->data['facebook_client_id'] = $this->config->get('facebook_client_id');
     $this->document->addScript("catalog/view/javascript/uploader/SimpleAjaxUploader.min.js");
     $this->document->addScript("https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js");
+    if($this->data['instagram_client_id'] || $this->data['facebook_client_id']){
+      $this->document->addScript("catalog/view/javascript/uploader/js.cookie.min.js");
+      $this->document->addScript("catalog/view/javascript/uploader/facebook.js");
+    }
     $this->document->addScript("catalog/view/javascript/uploader/uploadermain.js");
     $this->document->addStyle("catalog/view/theme/testUploader/stylesheet/uploader.css");
     $this->data['heading_title'] = $this->language->get('heading_title_image');
@@ -87,6 +93,7 @@ class ControllerModuleImageUploader extends Controller{
         'paper_type_id' => $image['paper_type_id'],
         'set_in_format' => $image['set_in_format'],
         'base' => $image['base'],
+        'link' => $image['link'],
         'quality' => $this->setQuality($formats_quality[(int)$image['format_id']], $image['size']),
         'options' => $options,
         'count' => $image['copy_count'],
@@ -102,7 +109,8 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['total_full_price'] = $this->currency->format($this->data['total_full_price']);
 
     $this->data['text_pc_upload'] = $this->language->get('text_pc_upload');
-    $this->data['text_vk_upload'] = $this->language->get('text_vk_upload');
+    $this->data['text_pc_upload_btn'] = $this->language->get('text_pc_upload_btn');
+    $this->data['text_upload_or'] = $this->language->get('text_upload_or');
     $this->data['text_fb_upload'] = $this->language->get('text_fb_upload');
     $this->data['text_inst_upload'] = $this->language->get('text_inst_upload');
     $this->data['text_paper_type'] = $this->language->get('text_paper_type');
@@ -128,7 +136,13 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['text_conform'] = $this->language->get('text_conform');
     $this->data['text_load_more'] = $this->language->get('text_load_more');
     $this->data['text_loading'] = $this->language->get('text_loading');
+    $this->data['text_check_all'] = $this->language->get('text_check_all');
     $this->data['server_redirect'] = HTTPS_SERVER;
+
+    $this->data['facebook_photos_limit'] = $this->config->get('facebook_photos_limit');
+    $this->data['facebook_albums_limit'] = $this->config->get('facebook_albums_limit');
+    $this->data['instagram_photos_limit'] = $this->config->get('instagram_photos_limit');
+    $this->data['image_allowed_formats'] = $this->config->get('image_allowed_formats');
 
     $this->children = array(
       'common/column_left',
@@ -262,6 +276,7 @@ class ControllerModuleImageUploader extends Controller{
     $images['base_path'] = DIR_IMAGE . "uploader_base/" . $session_id . "/" . $image_name . "." . $file_type;
     $this->output($images['base_path']);
     $images['base'] = HTTPS_IMAGE . "uploader_base/" . $session_id . "/" . $image_name . "." . $file_type;
+    $images['link'] = HTTPS_IMAGE . "uploader_tmp/" . $session_id . "/" . $image_name . "." . $file_type;
 
     return $images;
   }
@@ -274,9 +289,6 @@ class ControllerModuleImageUploader extends Controller{
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "GET");
     curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
 
-    $headers = array();
-    $headers[] = "Cookie: mid=W9SBpgAEAAGdwZ7TV1a1yx-l9y9W; mcd=3; csrftoken=ctebMkMOsBANk5xpoBLUd1t9is94K9tI; shbid=10692; ds_user_id=1386665409; rur=ATN; shbts=1543750445.2428164; sessionid=IGSC8ebff0fb286606ac3b9e3a9e9f72b066363ac64f1574fb1e6475f884e7863c14%3AdbiwJ3TxrXBjX9WzNgQSDpAvWYNzA6Ay%3A%7B%22_auth_user_id%22%3A1386665409%2C%22_auth_user_backend%22%3A%22accounts.backends.CaseInsensitiveModelBackend%22%2C%22_token%22%3A%221386665409%3A5nEQ3MQ7hRUcF7X1eAnKEZuL7BHgJM7y%3A0d30671d02936135656b954d0ccc10c2d26d38fb632f34d4fb93721604dfaff0%22%2C%22_platform%22%3A4%2C%22_remote_ip%22%3A%2291.222.220.66%22%2C%22_mid%22%3A%22W9SBpgAEAAGdwZ7TV1a1yx-l9y9W%22%2C%22_user_agent_md5%22%3A%22007875cd98f94237faa88c9dc5d00425%22%2C%22_token_ver%22%3A2%2C%22last_refreshed%22%3A1543750445.2441196442%7D; urlgen=\"{\"91.222.220.66\": 9164054 \"91.222.222.49\": 9164}:1gTdWY:SCFto2WvmYdiDcMTxMKS7gXUvFM\"";
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
     $image = curl_exec($ch);
@@ -392,6 +404,7 @@ class ControllerModuleImageUploader extends Controller{
               'path' => $images_saved['path'],
               'base_path' => $images_saved['base_path'],
               'base' => $images_saved['base'],
+              'link' => $images_saved['link'],
               'format_id' => $default['format']['id'],
               'paper_type_id' => $default['paper_type']['id'],
               'set_in_format' => 0,
@@ -405,33 +418,48 @@ class ControllerModuleImageUploader extends Controller{
 
             unset($tmp_image['session_id'], $tmp_image['path'], $tmp_image['size']);
             $upload_images[] = $tmp_image;
-          }else if(strpos($file_upload['type'], "zip") !== false){
-            $file_type = substr($file_upload['name'], strrpos($file_upload['name'], '.') + 1);
-            $zip_path = DIR_IMAGE . "uploader_tmp/" . md5($file_upload['name'] . random_bytes(5)) . "/";
+          }else if((strpos($file_upload['type'], "zip") !== false) || (strpos($file_upload['type'], "rar") !== false)){
 
-            $zip = new ZipArchive();
-            if($zip->open($file_upload['tmp_name']) === true){
-              @mkdir($zip_path, 0777);
-              $zip->extractTo($zip_path);
-              $zip->close();
+            $file_type = substr($file_upload['name'], strrpos($file_upload['name'], '.') + 1);
+            $archive_path = DIR_IMAGE . "uploader_tmp/" . md5($file_upload['name'] . random_bytes(5)) . "/";
+
+            if(strpos($file_upload['type'], "zip") !== false){
+              $zip = new ZipArchive();
+              if($zip->open($file_upload['tmp_name']) === true){
+                @mkdir($archive_path, 0777);
+                $zip->extractTo($archive_path);
+                $zip->close();
+              }else{
+                $json['error'] = $this->language->get('error_zip');
+              }
             }else{
-              $json['error'] = $this->language->get('error_zip');
+              $rar = RarArchive::open($file_upload['tmp_name']);
+              if($rar !== false){
+                @mkdir($archive_path, 0777);
+                foreach($rar->getEntries() as $e){
+                  $e->extract($archive_path);
+                }
+                $rar->close();
+              }else{
+                $json['error'] = $this->language->get('error_zip');
+              }
             }
 
             if(!isset($json['error'])){
-              $images = scandir($zip_path);
+              $images = scandir($archive_path);
               if($images !== false){
                 $images = preg_grep("/\.(?:png|gif|jpe?g)$/i", $images);
                 if(is_array($images)){
                   foreach($images as $image){
-                    $filesize = filesize($zip_path . $image);
-                    $images_saved = $this->saveImage(array('name' => $image, 'copy_name' => $zip_path . $image), $session_id);
+                    $filesize = filesize($archive_path . $image);
+                    $images_saved = $this->saveImage(array('name' => $image, 'copy_name' => $archive_path . $image), $session_id);
                     $tmp_image = array(
                       'session_id' => $session_id,
                       'name' => md5($image . date("j, n, Y H:i") . random_bytes(5)),
                       'path' => $images_saved['path'],
                       'base_path' => $images_saved['base_path'],
                       'base' => $images_saved['base'],
+                      'link' => $images_saved['link'],
                       'format_id' => $default['format']['id'],
                       'paper_type_id' => $default['paper_type']['id'],
                       'set_in_format' => 0,
@@ -450,7 +478,7 @@ class ControllerModuleImageUploader extends Controller{
               }else{
                 $json['error'] = $this->language->get('error_zip_empty');
               }
-              $this->removeDirectory($zip_path);
+              $this->removeDirectory($archive_path);
             }
           }else{
             $json['error'] = $this->language->get('error_format');
@@ -466,6 +494,7 @@ class ControllerModuleImageUploader extends Controller{
                'path' => $images_saved['path'],
                'base_path' => $images_saved['base_path'],
                'base' => $images_saved['base'],
+               'link' => $images_saved['link'],
                'format_id' => $default['format']['id'],
                'paper_type_id' => $default['paper_type']['id'],
                'set_in_format' => 0,
@@ -622,6 +651,7 @@ class ControllerModuleImageUploader extends Controller{
           $image['path'] = $path;
           $image['base_path'] = $base_path;
           $image['base'] = str_replace(DIR_IMAGE, HTTPS_IMAGE, $base_path);
+          $image['link'] = str_replace(DIR_IMAGE, HTTPS_IMAGE, $path);
 
           $this->model_module_uploader->addImage($image);
           unset($image['id'], $image['session_id'], $image['path'], $image['size'], $image['date'], $image['base_path']);

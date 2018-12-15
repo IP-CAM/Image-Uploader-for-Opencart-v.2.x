@@ -22,11 +22,13 @@ class Redirect{
   }
 
   private function curlInit($data){
+
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $data['url']);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_TIMEOUT, 20);
     curl_setopt($ch, CURLOPT_POST, $data['post']);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data['fields']);
     $result = curl_exec($ch);
     curl_close($ch);
@@ -79,6 +81,7 @@ class Redirect{
         'url' => 'https://api.instagram.com/oauth/access_token',
         'post' => true
       );
+
       $data = json_decode($this->curlInit($params), true);
 
       $this->access_token = isset($data['access_token'])?$data['access_token']:null;

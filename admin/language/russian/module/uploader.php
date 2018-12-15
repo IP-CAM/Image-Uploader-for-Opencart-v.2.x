@@ -10,6 +10,16 @@ $_['tab_quality']           = 'Качество';
 $_['text_module']           = 'Модули';
 //images
 $_['text_link']             = 'Ссылка загрузчика:';
+$_['text_facebook']         = 'Id приложения facebook:';
+$_['text_instagram']        = 'Id приложения instagram:';
+$_['text_social_limit_photo']    = 'Лимит фото на страницу:';
+$_['text_social_limit_albums']   = 'Лимит альбомов на страницу:';
+$_['text_social_allowed_formats']   = 'Разрешенные форматы для загрузки:';
+$_['text_social_allowed_formats_rar']   = 'rar';
+$_['text_social_allowed_formats_zip']   = 'zip';
+$_['text_social_allowed_formats_jpg']   = 'jpg';
+$_['text_social_allowed_formats_gif']   = 'gif';
+$_['text_social_allowed_formats_png']   = 'png';
 $_['text_link_label']       = '%s<input type="text" name="keyword" id="link" value="%s" placeholder="photo_uploader">/';
 $_['text_image_format']     = 'Формат фото:';
 $_['text_image_format_pl']  = '13х18';

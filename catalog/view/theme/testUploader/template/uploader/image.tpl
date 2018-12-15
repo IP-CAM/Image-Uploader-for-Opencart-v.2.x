@@ -1,99 +1,122 @@
 <?php echo $header; ?>
-<div class="items-loader">
+<div class="preloader">
   <div class="items-loader-wrap">
     <i class="fas fa-spinner fa-pulse icon-load"></i>
     <span class="text-load"><?php echo $text_loading; ?></span>
   </div>
 </div>
-<div id="uploaded-images" class="items">
-  <nav class="mass-change unset">
-    <div class="mass-change_action">
-      <span class="title"><?php echo $text_paper_type; ?></span>
-      <select name="paper_type_id">
-        <option value="" selected><?php echo $text_select; ?></option>
-        <?php foreach($paper_types as $type){ ?>
-          <option value="<?php echo $type['id']; ?>"><?php echo $type['name']; ?></option>
-        <?php }?>
-      </select>
-    </div>
-    <div class="mass-change_action">
-      <span class="title"><?php echo $text_format; ?></span>
-      <select name="format_id">
-        <option value="" selected><?php echo $text_select; ?></option>
-        <?php foreach($formats as $format){ ?>
-          <option value="<?php echo $format['id']; ?>"><?php echo $format['name']; ?></option>
-        <?php }?>
-      </select>
-    </div>
-    <?php foreach($options as $option) {?>
-      <div class="mass-change_action">
-        <span class="title"><?php if(!empty($option['article'])){ ?><a href="<?php echo $option['article']['link']; ?>" target="_blank" rel="noopener"><?php } ?><?php echo $option['name']; ?><?php if(!empty($option['article'])){ ?></a><?php }?></span>
-        <?php if($option['type'] == "select"){ ?>
-          <select name="option_<?php echo $option['id']; ?>">
-            <option value="" selected><?php echo $text_select; ?></option>
-            <?php foreach($option['values'] as $val){ ?>
-              <option value="<?php echo $val['id']; ?>"><?php echo $val['text']; ?></option>
-            <?php }?>
-          </select>
-        <?php }else if($option['type'] == "checkbox"){ ?>
-          <input type="checkbox" name="option_<?php echo $option['id']; ?>">
+
+<div id="main" class="items">
+  <div class="uploader-container">
+    <div class="upload-button drop-zone">
+      <div class="pc-upload">
+        <span><?php echo $text_pc_upload; ?></span>
+        <label class="upload-trigger">
+          <span><?php echo $text_pc_upload_btn; ?></span>
+          <input type="file" name="file_upload" class="file-upload" multiple>
+        </label>
+      </div>
+      <?php if($facebook_client_id || $instagram_client_id){ ?>
+      <div class="social-upload">
+        <span class="carry"><?php echo $text_upload_or; ?></span>
+        <?php if($facebook_client_id){ ?>
+        <a href="#" class="fb-upload upload-trigger">
+          <i class="fab fa-facebook"></i>
+        </a>
+        <?php } ?>
+        <?php if($instagram_client_id){ ?>
+        <a href="#" class="inst-upload upload-trigger">
+          <i class="fab fa-instagram"></i>
+        </a>
         <?php } ?>
       </div>
-    <?php } ?>
+      <?php } ?>
+    </div>
+    <div id="image-page" class="loaded unset">
+      <img src="" alt="" class="loaded-image-big">
+    </div>
+  </div>
+
+  <div class="mass-change-container <?php if(!$images){ ?>unset<?php } ?>">
+    <div class="mass-change_controls">
+      <div class="controls_selected-count">
+        <span class="btn selected-count_text"><?php echo $text_selected_count; ?></span>
+        <span class="btn selected-count_value">0</span>
+      </div>
+      <div class="controls_button-box">
+        <button class="btn mass-delete"><?php echo $text_delete; ?></button>
+        <button class="btn mass-submit"><?php echo $text_submit; ?></button>
+        <button class="btn mass-all"><?php echo $text_check_all; ?></button>
+      </div>
+    </div>
     <div class="mass-change_action">
-      <span class="title"><?php echo $text_count; ?></span>
       <div class="count">
         <button data-type="minus" class="btn button-count">-</button>
         <input type="text" name="copy_count" value="1">
         <button data-type="plus" class="btn button-count">+</button>
       </div>
     </div>
-    <div class="mass-change_controls">
-      <div class="selected-count">
-        <span class="btn selected-count_text"><?php echo $text_selected_count; ?></span>
-        <span class="btn selected-count_value">0</span>
-      </div>
-      <button class="btn mass-delete"><?php echo $text_delete; ?></button>
-      <button class="btn mass-submit"><?php echo $text_submit; ?></button>
+    <div class="mass-change_action">
+      <select name="paper_type_id">
+        <option value="" selected><?php echo $text_paper_type; ?></option>
+        <?php foreach($paper_types as $type){ ?>
+          <option value="<?php echo $type['id']; ?>"><?php echo $type['name']; ?></option>
+        <?php }?>
+      </select>
     </div>
-  </nav>
-  <div class="format-count-container <?php if(empty($images)){ ?>unset<?php } ?>">
-    <span class="title"><?php echo $text_multiplicity; ?></span>
-    <?php foreach($formats as $format) { ?>
-      <?php if($format['count'] > 0) { ?>
-        <div class="format-count_block" data-id="<?php echo $format['id']; ?>">
-          <span class="format-count_value"><?php echo $format['count']; ?></span>
-          <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
-        </div>
-      <?php }else{ ?>
-        <div class="format-count_block unset" data-id="<?php echo $format['id']; ?>">
-          <span class="format-count_value">0</span>
-          <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
+    <div class="mass-change_action">
+      <select name="format_id">
+        <option value="" selected><?php echo $text_format; ?></option>
+        <?php foreach($formats as $format){ ?>
+          <option value="<?php echo $format['id']; ?>"><?php echo $format['name']; ?></option>
+        <?php }?>
+      </select>
+    </div>
+    <?php foreach($options as $option) {?>
+      <?php if($option['type'] == "select"){ ?>
+        <div class="mass-change_action">
+          <select name="option_<?php echo $option['id']; ?>">
+            <option value="" selected><?php echo $option['name']; ?></option>
+            <?php foreach($option['values'] as $val){ ?>
+              <option value="<?php echo $val['id']; ?>"><?php echo $val['text']; ?></option>
+            <?php }?>
+          </select>
         </div>
       <?php } ?>
     <?php } ?>
+    <div class="mass-change_action">
+      <span class="title"><?php echo $text_set_in_format; ?></span>
+      <input type="checkbox" name="set_in_format">
+    </div>
+    <?php foreach($options as $option) {?>
+        <?php if($option['type'] == "checkbox"){ ?>
+          <div class="mass-change_action">
+            <span class="title"><?php echo $option['name']; ?></span>
+            <input type="checkbox" name="option_<?php echo $option['id']; ?>">
+          </div>
+        <?php } ?>
+    <?php } ?>
   </div>
-  <div class="uploader">
-    <div class="upload-button">
-      <label class="pc-upload thumbnail">
-        <span><?php echo $text_pc_upload; ?></span>
-        <input type="file" name="file_upload" class="file-upload" multiple>
-        <div class="drop-zone"></div>
-      </label>
-    </div>
-    <div class="upload-button">
-      <a href="#" class="fb-upload thumbnail">
-        <span><?php echo $text_fb_upload; ?></span>
-        <span><i class="fab fa-facebook"></i></span>
-      </a>
-    </div>
-    <div class="upload-button">
-      <a href="#" class="inst-upload thumbnail">
-        <span><?php echo $text_inst_upload; ?></span>
-        <span><i class="fab fa-instagram"></i></span>
-      </a>
+
+  <div class="summary-container">
+    <div class="format-box <?php if(empty($images)){ ?>unset<?php } ?>">
+      <span class="title"><?php echo $text_multiplicity; ?></span>
+      <?php foreach($formats as $format) { ?>
+        <?php if($format['count'] > 0) { ?>
+          <div class="format-count_block" data-id="<?php echo $format['id']; ?>">
+            <span class="format-count_value"><?php echo $format['count']; ?></span>
+            <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
+          </div>
+        <?php }else{ ?>
+          <div class="format-count_block unset" data-id="<?php echo $format['id']; ?>">
+            <span class="format-count_value">0</span>
+            <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
+          </div>
+        <?php } ?>
+      <?php } ?>
     </div>
   </div>
+
   <div class="items-container <?php if(!$images){ ?>empty-uploaded<?php } ?>">
     <?php foreach($images as $image){ ?>
       <div class="item" data-name="<?php echo $image['name']; ?>">
@@ -111,7 +134,7 @@
             <i class="far fa-trash-alt"></i>
           </button>
         </div>
-        <div class="item-wrap">
+        <div class="item-wrap" data-full-image="<?php echo $image['link']; ?>">
           <div class="item-inner">
             <div class="mask"></div>
             <img src="<?php echo $image['base']; ?>" alt="<?php echo $image['name']; ?>">
@@ -180,7 +203,24 @@
       </div>
     <?php } ?>
   </div>
-  <div class="summary">
+
+  <div class="summary-container">
+    <div class="format-box <?php if(empty($images)){ ?>unset<?php } ?>">
+      <span class="title"><?php echo $text_multiplicity; ?></span>
+      <?php foreach($formats as $format) { ?>
+        <?php if($format['count'] > 0) { ?>
+          <div class="format-count_block" data-id="<?php echo $format['id']; ?>">
+            <span class="format-count_value"><?php echo $format['count']; ?></span>
+            <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
+          </div>
+        <?php }else{ ?>
+          <div class="format-count_block unset" data-id="<?php echo $format['id']; ?>">
+            <span class="format-count_value">0</span>
+            <span class="format-count_name"><?php echo $text_multiplicity_dot . ' ' . $format['name']; ?></span>
+          </div>
+        <?php } ?>
+      <?php } ?>
+    </div>
     <div class="total-box">
       <div class="item">
         <span class="title"><?php echo $text_total_count; ?>:</span>
@@ -199,8 +239,13 @@
       <button class="btn confirm" <?php if(!$images){ ?>disabled<?php } ?>><?php echo $text_conform; ?></button>
     </div>
   </div>
+  <div class="uploader-error"></div>
 </div>
-<div id="instagram-loaded" class="loaded unset">
+
+<?php if($instagram_client_id){ ?>
+<!-- waiting for the update in 2020 facebook graph for the implementation of the boot from instagram
+<script type="text/template" id="instagram">
+<div id="instagram-page" class="loaded unset">
   <div class="items-container-wrap">
     <nav class="loaded-nav">
       <div class="loaded-title"><?php echo $text_inst_upload; ?></div>
@@ -213,21 +258,46 @@
     <ul class="items-container"></ul>
   </div>
 </div>
-<div id="facebook-loaded" class="loaded unset">
+</script>
+-->
+<?php } ?>
+<?php if($facebook_client_id){ ?>
+<script type="text/template" id="facebook">
+<div id="facebook-page" class="loaded unset">
   <div class="items-container-wrap">
     <nav class="loaded-nav">
       <div class="loaded-title"><?php echo $text_fb_upload; ?></div>
       <div class="loaded-buttons">
         <button class="btn upload-selected"><?php echo $text_upload_selected; ?></button>
         <button class="btn reload"><i class="fas fa-sync-alt"></i></button>
-        <button class="btn close-loaded"><i class="fas fa-times"></i></button>
+        <button class="btn close"><i class="fas fa-times"></i></button>
       </div>
     </nav>
     <ul class="items-container"></ul>
   </div>
 </div>
-<div class="uploader-error"></div>
+</script>
 
+<script type="text/template" id="loaded-albums">
+<% if(items.length > 0){ %>
+<% items.forEach(function(item){ %>
+<li class="social-album">
+  <div class="social-album_header" data-page="<%=item.url%>">
+    <i class="far fa-folder icon-closed"></i>
+    <i class="far fa-folder-open icon-open"></i>
+    <span class="social-album_header-title"><%=item.name%></span>
+    <i class="fas fa-spinner fa-pulse album-loader"></i>
+  </div>
+  <ul class="social-album_content"></ul>
+</li>
+<% }); %>
+<% }else{ %>
+<p class="loaded-empty"><?php echo $text_loaded_empty; ?></p>
+<% } %>
+</script>
+<?php } ?>
+
+<?php if($facebook_client_id || $instagram_client_id){ ?>
 <script type="text/template" id="loaded-items">
 <% if(items.length > 0){ %>
 <% items.forEach(function(item){ %>
@@ -242,6 +312,16 @@
 <p class="loaded-empty"><?php echo $text_loaded_empty; ?></p>
 <% } %>
 </script>
+
+<script type="text/template" id="load-more-button">
+<li class="social-item_load-more">
+  <button class="btn load-more" data-page="<% if(typeof next_url!=='undefined'){ %><%=next_url%><% }else{ %><%=next%><% } %>">
+    <span class="load-more_preloader"><i class="fas fa-spinner fa-pulse"></i></span>
+    <span class="load-more_text"><?php echo $text_load_more; ?></span>
+  </button>
+</li>
+</script>
+<?php } ?>
 
 <script type="text/template" id="upload-item">
 <div class="item" data-name="<%=name%>">
@@ -269,7 +349,7 @@
       <i class="far fa-trash-alt"></i>
     </button>
   </div>
-  <div class="item-wrap">
+  <div class="item-wrap" data-full-image="<%=link%>">
     <div class="item-inner">
     <div class="mask"></div>
       <img src="<%=base%>" alt="<%=name%>">
@@ -326,39 +406,37 @@
 </div>
 </script>
 
-<script type="text/template" id="load-more-button">
-<li class="social-item_load-more">
-  <button class="btn load-more" data-page="<% if(typeof next_url!=='undefined'){ %><%=next_url%><% }else{ %><%=next%><% } %>">
-    <span class="load-more_preloader"><i class="fas fa-spinner fa-pulse"></i></span>
-    <span class="load-more_text"><?php echo $text_load_more; ?></span>
-  </button>
-</li>
-</script>
-
-<script type="text/template" id="loaded-albums">
-<% if(items.length > 0){ %>
-<% items.forEach(function(item){ %>
-<li class="social-album">
-  <div class="social-album_header" data-page="<%=item.url%>">
-    <i class="far fa-folder icon-closed"></i>
-    <i class="far fa-folder-open icon-open"></i>
-    <span class="social-album_header-title"><%=item.name%></span>
-    <i class="fas fa-spinner fa-pulse album-loader"></i>
-  </div>
-  <ul class="social-album_content"></ul>
-</li>
-<% }); %>
-<% }else{ %>
-<p class="loaded-empty"><?php echo $text_loaded_empty; ?></p>
-<% } %>
+<script type="text/template" id="error-message">
+<div class="uploader-error_message">
+  <span class="message-text"><%=message%></span>
+  <button class="btn remove-message"><i class="fas fa-times"></i></button>
+</div>
 </script>
 
 <script><!--
 uploader({
   uploaderType: "image",
-  allowedFormats: ["zip", "jpg", "gif", "png"],
+  allowedFormats: [<?php if(isset($image_allowed_formats)){foreach($image_allowed_formats as $allowed_format){?>"<?php echo $allowed_format; ?>",<?php }}?>],
   ratio: <?php echo $ratio; ?>,
-  serverRedirect: "<?php echo $server_redirect; ?>"
+  server: "<?php echo $server_redirect; ?>",
+  <?php if($facebook_client_id){ ?>
+  facebook: {
+    clientId: "<?php echo $facebook_client_id; ?>",
+    <?php if($facebook_albums_limit){ ?>albumsLimit:<?php echo $facebook_albums_limit; ?>,<?php } ?>
+    <?php if($facebook_photos_limit){ ?>photosLimit:<?php echo $facebook_photos_limit; ?>,<?php } ?>
+  },
+  <?php }else{ ?>
+    facebook:false,
+  <?php } ?>
+
+  <?php if($instagram_client_id){ ?>
+  instagram: {
+    clientId: "<?php echo $instagram_client_id; ?>",
+    <?php if($instagram_photos_limit){ ?>photosLimit:<?php echo $instagram_photos_limit; ?>,<?php } ?>
+  },
+  <?php }else{ ?>
+    instagram:false,
+  <?php } ?>
 });
 --></script>
 <?php echo $footer; ?>

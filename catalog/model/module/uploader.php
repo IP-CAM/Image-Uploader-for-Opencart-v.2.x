@@ -2,7 +2,7 @@
 class ModelModuleUploader extends Model{
   public function getImages($id_session){
     $this->db->query("UPDATE " . DB_PREFIX . "uploader_image SET date = NOW() + INTERVAL 7 DAY WHERE session_id = '" . $this->db->escape($id_session) . "'");
-    return $this->db->query("SELECT name, path, options, base, format_id, paper_type_id, set_in_format, copy_count, size FROM " . DB_PREFIX . "uploader_image WHERE session_id = '" . $this->db->escape($id_session) . "'")->rows;
+    return $this->db->query("SELECT * FROM " . DB_PREFIX . "uploader_image WHERE session_id = '" . $this->db->escape($id_session) . "'")->rows;
   }
 
   public function getImage($name, $id_session){
@@ -10,11 +10,12 @@ class ModelModuleUploader extends Model{
   }
 
   public function addImage($data){
-    $sql = "INSERT INTO " . DB_PREFIX . "uploader_image (name, session_id, path, base, base_path, format_id, paper_type_id, set_in_format, options, copy_count, size, date) ";
+    $sql = "INSERT INTO " . DB_PREFIX . "uploader_image (name, session_id, path, base, link, base_path, format_id, paper_type_id, set_in_format, options, copy_count, size, date) ";
     $sql .= "VALUES ('" . $this->db->escape($data['name']) . "',";
     $sql .= " '" . $this->db->escape($data['session_id']) . "',";
     $sql .= " '" . $this->db->escape($data['path']) . "',";
     $sql .= " '" . $this->db->escape($data['base']) . "',";
+    $sql .= " '" . $this->db->escape($data['link']) . "',";
     $sql .= " '" . $this->db->escape($data['base_path']) . "',";
     $sql .= " '" . (int)$data['format_id'] . "',";
     $sql .= " '" . (int)$data['paper_type_id'] . "',";

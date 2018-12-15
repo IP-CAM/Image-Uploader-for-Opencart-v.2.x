@@ -33,6 +33,7 @@ class ModelModuleUploader extends Model {
       `path` varchar(255) NOT NULL,
       `base_path` varchar(255) NOT NULL,
       `base` varchar(255) NOT NULL,
+      `link` varchar(255) NOT NULL,
       `format_id` int(11) NOT NULL,
       `paper_type_id` int(11) NOT NULL,
       `set_in_format` int(1) NOT NULL DEFAULT '0',
