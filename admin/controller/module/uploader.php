@@ -338,6 +338,7 @@ class ControllerModuleUploader extends Controller {
 			$this->model_setting_setting->editSetting('uploader', $this->request->post);
 
 			$this->model_module_uploader->saveLink($this->request->post);
+			$this->cache->delete('seo_pro');
 			$json['success'] = true;
 		}
 
