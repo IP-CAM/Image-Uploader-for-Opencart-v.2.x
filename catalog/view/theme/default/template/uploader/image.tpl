@@ -439,4 +439,3 @@ uploader({
   <?php } ?>
 });
 --></script>
-<?php echo $footer; ?>

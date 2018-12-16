@@ -19,6 +19,13 @@ class ControllerModuleImageUploader extends Controller{
 
     $this->document->addScript("catalog/view/javascript/uploader/uploadermain.js");
 
+    //temporarily style
+    $this->document->addStyle("https://use.fontawesome.com/releases/v5.5.0/css/regular.css");
+    $this->document->addStyle("https://use.fontawesome.com/releases/v5.5.0/css/solid.css");
+    $this->document->addStyle("https://use.fontawesome.com/releases/v5.5.0/css/brands.css");
+    $this->document->addStyle("https://use.fontawesome.com/releases/v5.5.0/css/fontawesome.css");
+    //temporarily style
+
     if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/uploader/image.tpl')) {
       $this->document->addStyle("catalog/view/theme/" . $this->config->get('config_template') . "/stylesheet/uploader.css");
       $this->template = $this->config->get('config_template') . '/template/uploader/image.tpl';
@@ -155,9 +162,6 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['image_allowed_formats'] = $this->config->get('image_allowed_formats');
 
     $this->children = array(
-      'common/column_left',
-      'common/column_right',
-      'common/footer',
       'common/header'
     );
 
