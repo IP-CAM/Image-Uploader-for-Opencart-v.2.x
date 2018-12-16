@@ -12,9 +12,10 @@ $_['text_module']           = 'Модули';
 $_['text_link']             = 'Ссылка загрузчика:';
 $_['text_facebook']         = 'Id приложения facebook:';
 $_['text_instagram']        = 'Id приложения instagram:';
-$_['text_social_limit_photo']    = 'Лимит фото на страницу:';
-$_['text_social_limit_albums']   = 'Лимит альбомов на страницу:';
-$_['text_social_allowed_formats']   = 'Разрешенные форматы для загрузки:';
+$_['text_social_limit_photo']           = 'Лимит фото на страницу:';
+$_['text_social_limit_albums']          = 'Лимит альбомов на страницу:';
+$_['text_social_allowed_formats']       = 'Разрешенные форматы для загрузки:';
+$_['text_secret']           = 'Cекретный ключ приложения:';
 $_['text_social_allowed_formats_rar']   = 'rar';
 $_['text_social_allowed_formats_zip']   = 'zip';
 $_['text_social_allowed_formats_jpg']   = 'jpg';
@@ -23,8 +24,8 @@ $_['text_social_allowed_formats_png']   = 'png';
 $_['text_link_label']       = '%s<input type="text" name="keyword" id="link" value="%s" placeholder="photo_uploader">/';
 $_['text_image_format']     = 'Формат фото:';
 $_['text_image_format_pl']  = '13х18';
-$_['text_image_format_ratio_pl']= '3:4';
-$_['text_image_format_pix_pl']= '1500x2102';
+$_['text_image_format_ratio_pl']        = '3:4';
+$_['text_image_format_pix_pl']          = '1500x2102';
 $_['text_sort_pl']          = 'Порядок';
 $_['text_paper_type']       = 'Тип бумаги:';
 $_['text_paper_type_pl']    = 'Глянец';
@@ -49,8 +50,8 @@ $_['text_set_info']         = 'Заполните информацию в осн
 $_['text_option_name_pr']   = 'Значение';
 $_['text_option_value_pr']  = 'Цена';
 
-$_['h3_price_format']              = 'Формат';
-$_['h3_price_option']              = 'Опции';
+$_['h3_price_format']       = 'Формат';
+$_['h3_price_option']       = 'Опции';
 
 
 

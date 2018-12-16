@@ -159,7 +159,6 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['text_full_price'] = $this->language->get('text_full_price');
     $this->data['text_conform'] = $this->language->get('text_conform');
     $this->data['text_load_more'] = $this->language->get('text_load_more');
-    $this->data['text_loading'] = $this->language->get('text_loading');
     $this->data['text_check_all'] = $this->language->get('text_check_all');
     $this->data['server_redirect'] = HTTPS_SERVER;
 

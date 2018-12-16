@@ -46,6 +46,7 @@ var uploader = function(settings) {
     selectedItemsCount = selected.length;
     selectedItems = selected;
 
+    //hide mass update
     //if(selectedItemsCount != 0) self.main.massWrap.find(".mass-change_controls button").attr("disabled", false);
     //else self.main.massWrap.find(".mass-change_controls button").attr("disabled", true);
 
@@ -54,14 +55,19 @@ var uploader = function(settings) {
     return selectedItemsCount;
   };
 
-  self.preloader.show = function() {
-    $("body").css("overflow","hidden");
+  self.preloader.show = function(text = null) {
+    if(text) self.preloader.wrap.find(".text-load").text(text).removeClass("unset");
+    else self.preloader.wrap.find(".text-load").addClass("unset");
+
+    //disable scroll
+    //$("body").css("overflow","hidden");
     self.preloader.wrap.addClass("loading");
   };
 
   self.preloader.hide = function() {
     setTimeout(() => {
-      $("body").css("overflow","visible");
+      //enable scroll
+      //$("body").css("overflow","visible");
       self.preloader.wrap.removeClass("loading");
     });
   };
@@ -163,6 +169,8 @@ var uploader = function(settings) {
       $(trigger).attr("disabled", true);
     }
 
+    self.preloader.show();
+
     $.ajax({
       url: "index.php?route=module/" + settings.uploaderType + "_uploader/delete",
       type: "post",
@@ -171,6 +179,7 @@ var uploader = function(settings) {
       beforeSend: () => {
         if(!self.onlineTrigger){
           $(document).find(".item-controls_delete").attr("disabled", false);
+          self.preloader.hide();
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
         }
       },
@@ -184,6 +193,7 @@ var uploader = function(settings) {
         }else{
           self.error(json['error']);
         }
+        self.preloader.hide();
       }
     });
   };
@@ -224,6 +234,8 @@ var uploader = function(settings) {
         values[$(trigger).attr("name")] = $(trigger).prop("checked")?1:0;
     };
 
+    self.preloader.show();
+
     $.ajax({
       url: "index.php?route=module/" + settings.uploaderType + "_uploader/update",
       type: "post",
@@ -232,6 +244,7 @@ var uploader = function(settings) {
       beforeSend: () => {
         if(!self.onlineTrigger){
           resetValues(items, values);
+          self.preloader.hide();
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
         }
       },
@@ -266,22 +279,22 @@ var uploader = function(settings) {
         }else{
           self.error(json['error']);
         }
+        self.preloader.hide();
       }
     });
   };
 
   var copyItem = function(trigger) {
     var item = $(trigger).parent().parent().attr("data-name");
-
+    self.preloader.show("Изображение копируется, пожалуйста подождите!");
     $.ajax({
       url: "index.php?route=module/" + settings.uploaderType + "_uploader/copy",
       type: "post",
       dataType: "json",
       data: "item=" + encodeURIComponent(item),
       beforeSend: () => {
-        if(self.onlineTrigger){
-          self.preloader.show();
-        }else{
+        if(!self.onlineTrigger){
+          self.preloader.hide();
           self.error("Проверьте подключение к интернету и попробуйте еще раз.");
         }
       },
@@ -296,6 +309,7 @@ var uploader = function(settings) {
         }else{
           self.error(json['error']);
         }
+
         self.preloader.hide();
       }
     });
@@ -335,6 +349,11 @@ var uploader = function(settings) {
         tmpMaxHeight = $(item).find("img").height(),
         newWidth, newHeight, width, height, maxHeight, maxWidth;
         newWidth = newHeight = width = height = maxHeight = maxWidth = 0;
+
+    if(+tmpWidth == 0 && +tmpHeight == 0){
+      $(item).find(".mask").addClass("unset");
+      return;
+    }
 
     if((tmpMaxWidth > tmpMaxHeight && tmpWidth > tmpHeight) || (tmpMaxWidth > tmpMaxHeight && tmpWidth < tmpHeight)){
       width = tmpHeight;
@@ -399,6 +418,9 @@ var uploader = function(settings) {
     });
 
     if(itemsUploadWrap.find(".selected").length > 0){
+
+      self.preloader.show("Файлы загружаются, пожалуйста подождите!");
+
       $.ajax({
         url: "index.php?route=module/" + settings.uploaderType + "_uploader/upload",
         type: "post",
@@ -406,11 +428,11 @@ var uploader = function(settings) {
         data: "social_upload=" + encodeURIComponent(JSON.stringify(socialUpload)),
         beforeSend: () => {
           if(self.onlineTrigger){
-            self.preloader.show();
             itemsUploadWrap.find(".selected").removeClass("selected");
             itemsUploadWrap.find(".open").removeClass("open").addClass("ready-open");
             itemsUploadWrap.addClass("unset");
           }else{
+            self.preloader.hide();
             self.error("Проверьте подключение к интернету и попробуйте еще раз.");
           }
         },
@@ -430,6 +452,7 @@ var uploader = function(settings) {
           }else{
             self.error(responseParsed.error);
           }
+
           self.preloader.hide();
         }
       });
@@ -442,6 +465,7 @@ var uploader = function(settings) {
     if(typeof settings.ratio != "undefined"){
       self.main.itemsWrap.find(".item").each((i, item) => calculateMask(item));
     }
+    self.preloader.hide();
   });
 
   $(document).on("ready", function() {
@@ -463,8 +487,8 @@ var uploader = function(settings) {
       responseType: "json",
       allowedExtensions: settings.allowedFormats,
       maxSize: 1022976,
-      onExtError: filename => {
-        self.error("Файл \"" + filename + "\" не будет загружен. Поддерживаются форматы " + settings.allowedFormats.join(', ') + "!");
+      onExtError: () => {
+        self.error("Файл не будет загружен. Поддерживаются форматы " + settings.allowedFormats.join(', ') + "!");
       },
       onChange: () => {
         if(!self.onlineTrigger){
@@ -473,7 +497,7 @@ var uploader = function(settings) {
           return false;
         }
       },
-      onSubmit: () => self.preloader.show(),
+      onSubmit: () => self.preloader.show("Файлы загружаются, пожалуйста подождите!"),
       onComplete: (filename, response) => successUpload(response),
       onAllDone: () => self.preloader.hide()
     };
@@ -532,7 +556,6 @@ var uploader = function(settings) {
       }
 
       $(document).on("click", ".fb-upload", function(e) {
-        e.preventDefault();
         fb.albums();
       });
 
@@ -550,22 +573,17 @@ var uploader = function(settings) {
     }
 
     $(document).on("click", ".loaded", function(e) {
-      if($(".loaded").has(e.target).length === 0){
-        var wrap = $(this).find(".items-container-wrap");
-        wrap.parent().addClass("unset");
-        wrap.find(".open").removeClass("open").addClass("ready-open");
-        $("body").css("overflow","visible");
-      }
+      if($(".loaded").has(e.target).length === 0) $(this).find(".close").trigger("click");
     });
 
-    $(document).on("click", ".loaded .close", function(e) {
+    $(document).on("click", ".loaded .close", function() {
       var wrap = $(this).parent().parent().parent();
       wrap.parent().addClass("unset");
       wrap.find(".open").removeClass("open").addClass("ready-open");
       $("body").css("overflow","visible");
     });
 
-    $(document).on("mouseup touchend", ".social-item", function() {
+    $(document).on("click", ".loaded .social-item", function() {
       if($(this).hasClass("selected")) $(this).removeClass("selected");
       else $(this).addClass("selected");
     });

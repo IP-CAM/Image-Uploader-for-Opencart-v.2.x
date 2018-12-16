@@ -1,8 +1,8 @@
 <?php echo $header; ?>
-<div class="preloader">
+<div class="preloader loading">
   <div class="items-loader-wrap">
     <i class="fas fa-spinner fa-pulse icon-load"></i>
-    <span class="text-load"><?php echo $text_loading; ?></span>
+    <span class="text-load unset"></span>
   </div>
 </div>
 
@@ -20,14 +20,14 @@
       <div class="social-upload">
         <span class="carry"><?php echo $text_upload_or; ?></span>
         <?php if(!empty($image_uploader['facebook']['client_id'])){ ?>
-        <a href="#" class="fb-upload upload-trigger">
+        <span class="fb-upload upload-trigger">
           <i class="fab fa-facebook"></i>
-        </a>
+        </span>
         <?php } ?>
         <?php if(!empty($image_uploader['instagram']['client_id'])){ ?>
-        <a href="#" class="inst-upload upload-trigger">
+        <span href="#" class="inst-upload upload-trigger">
           <i class="fab fa-instagram"></i>
-        </a>
+        </span>
         <?php } ?>
       </div>
       <?php } ?>
@@ -302,10 +302,12 @@
 <% if(items.length > 0){ %>
 <% items.forEach(function(item){ %>
 <li class="social-item" data-pid="<%=item.id%>" data-url="<%=item.data_url%>" style="background-image:url('<%=item.url%>');">
-  <div class="item-inner">
+  <!-- <div class="item-inner">
     <i class="fas fa-spinner fa-pulse icon-load"></i>
     <i class="far fa-check-circle icon-selected"></i>
-  </div>
+  </div> -->
+  <i class="fas fa-spinner fa-pulse icon-load"></i>
+  <i class="far fa-check-circle icon-selected"></i>
 </li>
 <% }); %>
 <% }else{ %>
