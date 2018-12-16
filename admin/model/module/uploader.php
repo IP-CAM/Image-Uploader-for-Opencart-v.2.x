@@ -37,10 +37,10 @@ class ModelModuleUploader extends Model {
       `format_id` int(11) NOT NULL,
       `paper_type_id` int(11) NOT NULL,
       `set_in_format` int(1) NOT NULL DEFAULT '0',
-      `options` json NOT NULL,
+      `options` NOT NULL,
       `copy_count` int(11) NOT NULL,
       `size` int(11) NOT NULL,
-      `date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      `date` datetime NOT NULL,
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");

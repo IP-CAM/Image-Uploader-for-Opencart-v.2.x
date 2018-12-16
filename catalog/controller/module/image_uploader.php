@@ -11,19 +11,29 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['facebook_client_id'] = $this->config->get('facebook_client_id');
     $this->document->addScript("catalog/view/javascript/uploader/SimpleAjaxUploader.min.js");
     $this->document->addScript("https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js");
+
     if($this->data['instagram_client_id'] || $this->data['facebook_client_id']){
       $this->document->addScript("catalog/view/javascript/uploader/js.cookie.min.js");
       $this->document->addScript("catalog/view/javascript/uploader/facebook.js");
     }
+
     $this->document->addScript("catalog/view/javascript/uploader/uploadermain.js");
-    $this->document->addStyle("catalog/view/theme/testUploader/stylesheet/uploader.css");
+
+    if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/uploader/image.tpl')) {
+      $this->document->addStyle("catalog/view/theme/" . $this->config->get('config_template') . "/stylesheet/uploader.css");
+      $this->template = $this->config->get('config_template') . '/template/uploader/image.tpl';
+    } else {
+      $this->document->addStyle("catalog/view/theme/default/stylesheet/uploader.css");
+      $this->template = 'default/template/uploader/image.tpl';
+    }
+
     $this->data['heading_title'] = $this->language->get('heading_title_image');
     $this->document->setTitle($this->data['heading_title']);
     if(isset($this->request->cookie['uis'])){
     	$uis = $this->request->cookie['uis'];
     	setcookie('uis', $uis, time() + 3600 * 24 * 7, '/');
     }else{
-      $uis = md5(rand(0, 200) * rand(0, 200) . random_bytes(5));
+      $uis = md5(rand(0, 200) * rand(0, 200) . openssl_random_pseudo_bytes(5));
     	setcookie('uis', $uis, time() + 3600 * 24 * 7, '/');
     }
     $session_id = hash("sha256", $uis);
@@ -151,36 +161,7 @@ class ControllerModuleImageUploader extends Controller{
       'common/header'
     );
 
-    if (file_exists(DIR_TEMPLATE . $this->config->get('config_template') . '/template/uploader/image.tpl')) {
-      $this->template = $this->config->get('config_template') . '/template/uploader/image.tpl';
-    } else {
-      $this->template = 'default/template/uploader/image.tpl';
-    }
-
     $this->response->setOutput($this->render());
-  }
-
-  public function getAccessInstagram($code){
-    $fields = array(
-       'client_id'     => 'd103bb3cf5c84baca2a28a5a502ec7be',
-       'client_secret' => 'cfe7e32a73924080afbacaa310356b50',
-       'grant_type'    => 'authorization_code',
-       'redirect_uri'  => $this->url->link('module/image_uploader', '', 'SSL'),
-       'code'          => $code
-    );
-
-    $url = 'https://api.instagram.com/oauth/access_token';
-
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
-    $result = curl_exec($ch);
-    curl_close($ch);
-
-    return json_decode($result);
   }
 
   public function getData($session_id){
@@ -258,7 +239,7 @@ class ControllerModuleImageUploader extends Controller{
     if(!file_exists(DIR_IMAGE . "uploader_tmp/" . $session_id . "/")){
       @mkdir(DIR_IMAGE . "uploader_tmp/" . $session_id . "/", 0777);
     }
-    $image_name = md5($file_upload['name'] . random_bytes(5));
+    $image_name = md5($file_upload['name'] . openssl_random_pseudo_bytes(5));
     $images['path'] = DIR_IMAGE . "uploader_tmp/" . $session_id . "/" . $image_name . "." . $file_type;
     if(isset($file_upload['tmp_name'])){
       move_uploaded_file($file_upload['tmp_name'], $images['path']);
@@ -400,7 +381,7 @@ class ControllerModuleImageUploader extends Controller{
             $images_saved = $this->saveImage($file_upload, $session_id);
             $tmp_image = array(
               'session_id' => $session_id,
-              'name' => md5($file_upload['name'] . date("j, n, Y H:i") . random_bytes(5)),
+              'name' => md5($file_upload['name'] . date("j, n, Y H:i") . openssl_random_pseudo_bytes(5)),
               'path' => $images_saved['path'],
               'base_path' => $images_saved['base_path'],
               'base' => $images_saved['base'],
@@ -421,7 +402,7 @@ class ControllerModuleImageUploader extends Controller{
           }else if((strpos($file_upload['type'], "zip") !== false) || (strpos($file_upload['type'], "rar") !== false)){
 
             $file_type = substr($file_upload['name'], strrpos($file_upload['name'], '.') + 1);
-            $archive_path = DIR_IMAGE . "uploader_tmp/" . md5($file_upload['name'] . random_bytes(5)) . "/";
+            $archive_path = DIR_IMAGE . "uploader_tmp/" . md5($file_upload['name'] . openssl_random_pseudo_bytes(5)) . "/";
 
             if(strpos($file_upload['type'], "zip") !== false){
               $zip = new ZipArchive();
@@ -455,7 +436,7 @@ class ControllerModuleImageUploader extends Controller{
                     $images_saved = $this->saveImage(array('name' => $image, 'copy_name' => $archive_path . $image), $session_id);
                     $tmp_image = array(
                       'session_id' => $session_id,
-                      'name' => md5($image . date("j, n, Y H:i") . random_bytes(5)),
+                      'name' => md5($image . date("j, n, Y H:i") . openssl_random_pseudo_bytes(5)),
                       'path' => $images_saved['path'],
                       'base_path' => $images_saved['base_path'],
                       'base' => $images_saved['base'],
@@ -486,8 +467,8 @@ class ControllerModuleImageUploader extends Controller{
         }else if(isset($this->request->post['social_upload'])){
            $social_upload = json_decode(html_entity_decode(urldecode($this->request->post['social_upload'])), true);
            foreach($social_upload as $social_image){
-             $image_name = md5($social_image . date("j, n, Y H:i") . random_bytes(5));
-             $images_saved = $this->saveImage(array('name' => md5(random_bytes(10)) . '.jpg', 'social_name' => $social_image), $session_id);
+             $image_name = md5($social_image . date("j, n, Y H:i") . openssl_random_pseudo_bytes(5));
+             $images_saved = $this->saveImage(array('name' => md5(openssl_random_pseudo_bytes(10)) . '.jpg', 'social_name' => $social_image), $session_id);
              $tmp_image = array(
                'session_id' => $session_id,
                'name' => $image_name,
@@ -632,13 +613,13 @@ class ControllerModuleImageUploader extends Controller{
         $session_id = hash("sha256", $uis);
         $name = urldecode($this->request->post['item']);
         $image = $this->model_module_uploader->getImage($name, $session_id);
-        $image['name'] = md5($image['name'] . date("j, n, Y H:i") . random_bytes(5));
+        $image['name'] = md5($image['name'] . date("j, n, Y H:i") . openssl_random_pseudo_bytes(5));
         try{
           $path = substr($image['path'], 0, strrpos($image['path'], '/'));
           $base_path = substr($image['base_path'], 0, strrpos($image['base_path'], '/'));
 
           $file = explode('.', strrchr($image['path'], '/'));
-          $new_file = "/" . md5($file[0] . random_bytes(5)) . "." . $file[1];
+          $new_file = "/" . md5($file[0] . openssl_random_pseudo_bytes(5)) . "." . $file[1];
 
           $path .= $new_file;
           $base_path .= $new_file;
