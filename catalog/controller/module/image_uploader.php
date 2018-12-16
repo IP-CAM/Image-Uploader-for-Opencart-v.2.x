@@ -262,8 +262,8 @@ class ControllerModuleImageUploader extends Controller{
     }
     $images['base_path'] = DIR_IMAGE . "uploader_base/" . $session_id . "/" . $image_name . "." . $file_type;
     $this->output($images['base_path']);
-    $images['base'] = HTTPS_IMAGE . "uploader_base/" . $session_id . "/" . $image_name . "." . $file_type;
-    $images['link'] = HTTPS_IMAGE . "uploader_tmp/" . $session_id . "/" . $image_name . "." . $file_type;
+    $images['base'] = HTTPS_SERVER . "image/uploader_base/" . $session_id . "/" . $image_name . "." . $file_type;
+    $images['link'] = HTTPS_SERVER . "image/uploader_tmp/" . $session_id . "/" . $image_name . "." . $file_type;
 
     return $images;
   }
@@ -641,8 +641,8 @@ class ControllerModuleImageUploader extends Controller{
 
           $image['path'] = $path;
           $image['base_path'] = $base_path;
-          $image['base'] = str_replace(DIR_IMAGE, HTTPS_IMAGE, $base_path);
-          $image['link'] = str_replace(DIR_IMAGE, HTTPS_IMAGE, $path);
+          $image['base'] = str_replace(DIR_IMAGE, HTTPS_SERVER . "image/", $base_path);
+          $image['link'] = str_replace(DIR_IMAGE, HTTPS_SERVER . "image/", $path);
 
           $this->model_module_uploader->addImage($image);
           unset($image['id'], $image['session_id'], $image['path'], $image['size'], $image['date'], $image['base_path']);
