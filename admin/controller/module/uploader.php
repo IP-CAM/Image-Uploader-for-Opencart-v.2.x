@@ -100,6 +100,7 @@ class ControllerModuleUploader extends Controller {
 		$this->data['text_option_select'] = $this->language->get('text_option_select');
 		$this->data['text_facebook'] = $this->language->get('text_facebook');
 		$this->data['text_instagram'] = $this->language->get('text_instagram');
+		$this->data['text_secret'] = $this->language->get('text_secret');
 		$this->data['text_social_limit_photo'] = $this->language->get('text_social_limit_photo');
 		$this->data['text_social_limit_albums'] = $this->language->get('text_social_limit_albums');
 		$this->data['text_social_allowed_formats'] = $this->language->get('text_social_allowed_formats');
@@ -114,40 +115,10 @@ class ControllerModuleUploader extends Controller {
 		$this->data['counts_paper'] = $this->model_module_uploader->getRows("count_paper", 0);
 		$this->data['options'] = $this->model_module_uploader->getOptionRows(0);
 
-		if($this->config->get('facebook_client_id')){
-			$this->data['facebook_client_id'] = $this->config->get('facebook_client_id');
+		if($this->config->get('image_uploader')){
+			$this->data['image_uploader'] = $this->config->get('image_uploader');
 		}else{
-			$this->data['facebook_client_id'] = '';
-		}
-
-		if($this->config->get('facebook_photos_limit')){
-			$this->data['facebook_photos_limit'] = $this->config->get('facebook_photos_limit');
-		}else{
-			$this->data['facebook_photos_limit'] = '';
-		}
-
-		if($this->config->get('facebook_albums_limit')){
-			$this->data['facebook_albums_limit'] = $this->config->get('facebook_albums_limit');
-		}else{
-			$this->data['facebook_albums_limit'] = '';
-		}
-
-		if($this->config->get('instagram_client_id')){
-			$this->data['instagram_client_id'] = $this->config->get('instagram_client_id');
-		}else{
-			$this->data['instagram_client_id'] = '';
-		}
-
-		if($this->config->get('instagram_photos_limit')){
-			$this->data['instagram_photos_limit'] = $this->config->get('instagram_photos_limit');
-		}else{
-			$this->data['instagram_photos_limit'] = '';
-		}
-
-		if($this->config->get('image_allowed_formats')){
-			$this->data['image_allowed_formats'] = $this->config->get('image_allowed_formats');
-		}else{
-			$this->data['image_allowed_formats'] = array();
+			$this->data['image_uploader'] = array();
 		}
 
     $this->template = 'module/uploader/images.tpl';

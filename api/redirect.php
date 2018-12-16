@@ -1,14 +1,32 @@
 <?php
 require '../config.php';
+require '../system/library/db.php';
+require '../system/library/config.php';
 class Redirect{
   private $code = null;
   private $access_token = null;
   private $social_name = null;
   private $expires_in = null;
+  private $social_settings = null;
 
   public function __construct($code, $social_name){
     $this->code = $code;
     $this->social_name = $social_name;
+    $db = new DB(DB_DRIVER, DB_HOSTNAME, DB_USERNAME, DB_PASSWORD, DB_DATABASE);
+
+    if (isset($_SERVER['HTTPS']) && (($_SERVER['HTTPS'] == 'on') || ($_SERVER['HTTPS'] == '1'))) {
+    	$store_query = $db->query("SELECT * FROM " . DB_PREFIX . "store WHERE REPLACE(`ssl`, 'www.', '') = '" . $db->escape('https://' . str_replace('www.', '', $_SERVER['HTTP_HOST']) . rtrim(dirname($_SERVER['PHP_SELF']), '/.\\') . '/') . "'");
+    } else {
+    	$store_query = $db->query("SELECT * FROM " . DB_PREFIX . "store WHERE REPLACE(`url`, 'www.', '') = '" . $db->escape('http://' . str_replace('www.', '', $_SERVER['HTTP_HOST']) . rtrim(dirname($_SERVER['PHP_SELF']), '/.\\') . '/') . "'");
+    }
+
+    if ($store_query->num_rows) {
+    	$config_store_id = $store_query->row['store_id'];
+    } else {
+    	$config_store_id =  0;
+    }
+
+    $this->social_settings = unserialize($db->query("SELECT `value` FROM " . DB_PREFIX . "setting WHERE (store_id = '0' OR store_id = '" . (int)$config_store_id . "') AND `key` = 'image_uploader'")->row['value']);
   }
 
   private function setAccesToken(){
@@ -39,8 +57,8 @@ class Redirect{
     if(!is_null($this->code)){
       $params = array(
         'fields' => array(
-          'client_id'     => FACEBOOK_CLIENT_ID,
-          'client_secret' => FACEBOOK_SECRET,
+          'client_id'     => $this->social_settings['facebook']['client_id'],
+          'client_secret' => $this->social_settings['facebook']['secret'],
           'redirect_uri'  => HTTPS_SERVER . "api/" . $this->social_name . ".php",
           'code'          => $this->code
         ),
@@ -72,8 +90,8 @@ class Redirect{
     if(!is_null($this->code)){
       $params = array(
         'fields' => array(
-          'client_id'     => INSTAGRAM_CLIENT_ID,
-          'client_secret' => INSTAGRAM_SECRET,
+          'client_id'     => $this->social_settings['instagram']['client_id'],
+          'client_secret' => $this->social_settings['instagram']['secret'],
           'grant_type'    => 'authorization_code',
           'redirect_uri'  => HTTPS_SERVER . "api/" . $this->social_name . ".php",
           'code'          => $this->code

@@ -7,15 +7,22 @@ class ControllerModuleImageUploader extends Controller{
     $this->load->model('module/uploader');
     $this->load->language('module/uploader');
 
-    $this->data['instagram_client_id'] = $this->config->get('instagram_client_id');
-    $this->data['facebook_client_id'] = $this->config->get('facebook_client_id');
+    $this->data['image_uploader'] = $this->config->get('image_uploader');
+
     $this->document->addScript("catalog/view/javascript/uploader/SimpleAjaxUploader.min.js");
     $this->document->addScript("https://cdn.jsdelivr.net/npm/lodash@4.17.11/lodash.min.js");
 
-    if($this->data['instagram_client_id'] || $this->data['facebook_client_id']){
+    if(!empty($this->data['image_uploader']['instagram']['client_id']) || !empty($this->data['image_uploader']['facebook']['client_id'])){
       $this->document->addScript("catalog/view/javascript/uploader/js.cookie.min.js");
+    }
+
+    if(!empty($this->data['image_uploader']['facebook']['client_id'])){
       $this->document->addScript("catalog/view/javascript/uploader/facebook.js");
     }
+
+    // if(empty($this->data['image_uploader']['instagram']['client_id'])){
+    //   $this->document->addScript("catalog/view/javascript/uploader/instagram.js");
+    // }
 
     $this->document->addScript("catalog/view/javascript/uploader/uploadermain.js");
 
@@ -155,11 +162,6 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['text_loading'] = $this->language->get('text_loading');
     $this->data['text_check_all'] = $this->language->get('text_check_all');
     $this->data['server_redirect'] = HTTPS_SERVER;
-
-    $this->data['facebook_photos_limit'] = $this->config->get('facebook_photos_limit');
-    $this->data['facebook_albums_limit'] = $this->config->get('facebook_albums_limit');
-    $this->data['instagram_photos_limit'] = $this->config->get('instagram_photos_limit');
-    $this->data['image_allowed_formats'] = $this->config->get('image_allowed_formats');
 
     $this->children = array(
       'common/header'

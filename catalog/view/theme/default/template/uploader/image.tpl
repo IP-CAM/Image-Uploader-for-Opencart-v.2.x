@@ -16,15 +16,15 @@
           <input type="file" name="file_upload" class="file-upload" multiple>
         </label>
       </div>
-      <?php if($facebook_client_id || $instagram_client_id){ ?>
+      <?php if((!empty($image_uploader['facebook']['client_id']) && !empty($image_uploader['facebook']['secret'])) || (!empty($image_uploader['instagram']['client_id']) && !empty($image_uploader['instagram']['secret']))){ ?>
       <div class="social-upload">
         <span class="carry"><?php echo $text_upload_or; ?></span>
-        <?php if($facebook_client_id){ ?>
+        <?php if(!empty($image_uploader['facebook']['client_id'])){ ?>
         <a href="#" class="fb-upload upload-trigger">
           <i class="fab fa-facebook"></i>
         </a>
         <?php } ?>
-        <?php if($instagram_client_id){ ?>
+        <?php if(!empty($image_uploader['instagram']['client_id'])){ ?>
         <a href="#" class="inst-upload upload-trigger">
           <i class="fab fa-instagram"></i>
         </a>
@@ -242,7 +242,7 @@
   <div class="uploader-error"></div>
 </div>
 
-<?php if($instagram_client_id){ ?>
+<?php if(!empty($image_uploader['instagram']['client_id']) && !empty($image_uploader['instagram']['secret'])){ ?>
 <!-- waiting for the update in 2020 facebook graph for the implementation of the boot from instagram
 <script type="text/template" id="instagram">
 <div id="instagram-page" class="loaded unset">
@@ -261,7 +261,7 @@
 </script>
 -->
 <?php } ?>
-<?php if($facebook_client_id){ ?>
+<?php if(!empty($image_uploader['facebook']['client_id']) && !empty($image_uploader['facebook']['secret'])){ ?>
 <script type="text/template" id="facebook">
 <div id="facebook-page" class="loaded unset">
   <div class="items-container-wrap">
@@ -297,7 +297,7 @@
 </script>
 <?php } ?>
 
-<?php if($facebook_client_id || $instagram_client_id){ ?>
+<?php if((!empty($image_uploader['facebook']['client_id']) && !empty($image_uploader['facebook']['secret'])) || (!empty($image_uploader['instagram']['client_id']) && !empty($image_uploader['instagram']['secret']))){ ?>
 <script type="text/template" id="loaded-items">
 <% if(items.length > 0){ %>
 <% items.forEach(function(item){ %>
@@ -416,23 +416,23 @@
 <script><!--
 uploader({
   uploaderType: "image",
-  allowedFormats: [<?php if(isset($image_allowed_formats)){foreach($image_allowed_formats as $allowed_format){?>"<?php echo $allowed_format; ?>",<?php }}?>],
+  allowedFormats: [<?php if(!empty($image_uploader['allowed_formats'])){foreach($image_uploader['allowed_formats'] as $allowed_format){?>"<?php echo $allowed_format; ?>",<?php }}?>],
   ratio: <?php echo $ratio; ?>,
   server: "<?php echo $server_redirect; ?>",
-  <?php if($facebook_client_id){ ?>
+  <?php if(!empty($image_uploader['facebook']['client_id']) && !empty($image_uploader['facebook']['secret'])){ ?>
   facebook: {
-    clientId: "<?php echo $facebook_client_id; ?>",
-    <?php if($facebook_albums_limit){ ?>albumsLimit:<?php echo $facebook_albums_limit; ?>,<?php } ?>
-    <?php if($facebook_photos_limit){ ?>photosLimit:<?php echo $facebook_photos_limit; ?>,<?php } ?>
+    clientId: "<?php echo $image_uploader['facebook']['client_id']; ?>",
+    <?php if(!empty($image_uploader['facebook']['albums_limit'])){ ?>albumsLimit:<?php echo $image_uploader['facebook']['albums_limit']; ?>,<?php } ?>
+    <?php if(!empty($image_uploader['facebook']['photos_limit'])){ ?>photosLimit:<?php echo $image_uploader['facebook']['photos_limit']; ?>,<?php } ?>
   },
   <?php }else{ ?>
     facebook:false,
   <?php } ?>
 
-  <?php if($instagram_client_id){ ?>
+  <?php if(!empty($image_uploader['instagram']['client_id']) && !empty($image_uploader['instagram']['secret'])){ ?>
   instagram: {
-    clientId: "<?php echo $instagram_client_id; ?>",
-    <?php if($instagram_photos_limit){ ?>photosLimit:<?php echo $instagram_photos_limit; ?>,<?php } ?>
+    clientId: "<?php echo $image_uploader['instagram']['client_id']; ?>",
+    <?php if(!empty($image_uploader['instagram']['photos_limit'])){ ?>photosLimit:<?php echo $image_uploader['instagram']['photos_limit']; ?>,<?php } ?>
   },
   <?php }else{ ?>
     instagram:false,
