@@ -65,11 +65,9 @@ var uploader = function(settings) {
   };
 
   self.preloader.hide = function() {
-    setTimeout(() => {
-      //enable scroll
-      //$("body").css("overflow","visible");
-      self.preloader.wrap.removeClass("loading");
-    });
+    //enable scroll
+    // $("body").css("overflow","visible");
+    self.preloader.wrap.removeClass("loading");
   };
 
   var showBigImage = function(trigger) {
@@ -305,12 +303,14 @@ var uploader = function(settings) {
           copy.options = jQuery.parseJSON(copy.options);
           $(trigger).parent().parent().after(self.template("upload-item", copy));
           update(data);
-          $(".item[data-name=\'" + copy.name + "\']").find("img").on("load", () => calculateMask(".item[data-name=\'" + copy.name + "\']"));
+          $(".item[data-name=\'" + copy.name + "\']").find("img").on("load", () => {
+            calculateMask(".item[data-name=\'" + copy.name + "\']");
+            self.preloader.hide();
+          });
         }else{
+          self.preloader.hide();
           self.error(json['error']);
         }
-
-        self.preloader.hide();
       }
     });
   };
@@ -432,6 +432,7 @@ var uploader = function(settings) {
             itemsUploadWrap.find(".open").removeClass("open").addClass("ready-open");
             itemsUploadWrap.addClass("unset");
           }else{
+            $("body").css("overflow","visible");
             self.preloader.hide();
             self.error("Проверьте подключение к интернету и попробуйте еще раз.");
           }
@@ -445,15 +446,17 @@ var uploader = function(settings) {
               self.main.itemsWrap.append(self.template("upload-item", item));
               $(".item[data-name=\'" + item.name + "\']").find("img").on("load", () => {
                 calculateMask(".item[data-name=\'" + item.name + "\']");
+                $("body").css("overflow","visible");
+                self.preloader.hide();
               });
             });
 
             update(data);
           }else{
+            $("body").css("overflow","visible");
+            self.preloader.hide();
             self.error(responseParsed.error);
           }
-
-          self.preloader.hide();
         }
       });
     }else{
