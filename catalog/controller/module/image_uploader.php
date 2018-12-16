@@ -575,7 +575,11 @@ class ControllerModuleImageUploader extends Controller{
               }
               $option_data = explode('_', $key);
               if(isset($options[$option_data[1]])){
-                $options[$option_data[1]]['value'] = $value;
+                if($options[$option_data[1]]['type'] == 'checkbox' && (int)$value == 0){
+                  unset($options[$option_data[1]]);
+                }else{
+                  $options[$option_data[1]]['value'] = $value;
+                }
               }else{
                 $type = $this->model_module_uploader->getOptionType('image', $option_data[1]);
                 if(!is_null($type)){
