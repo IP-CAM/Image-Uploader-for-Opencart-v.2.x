@@ -37,7 +37,7 @@ class ModelModuleUploader extends Model {
       `format_id` int(11) NOT NULL,
       `paper_type_id` int(11) NOT NULL,
       `set_in_format` int(1) NOT NULL DEFAULT '0',
-      `options` NOT NULL,
+      `options` text NOT NULL,
       `copy_count` int(11) NOT NULL,
       `size` int(11) NOT NULL,
       `date` datetime NOT NULL,
