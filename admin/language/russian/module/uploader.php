@@ -6,6 +6,7 @@ $_['tab_document_upload']   = 'Загрузчик документов';
 $_['tab_price']             = 'Расценки';
 $_['tab_option']            = 'Опции';
 $_['tab_quality']           = 'Качество';
+$_['tab_exception']         = 'Исключения';
 
 $_['text_module']           = 'Модули';
 //images

@@ -204,11 +204,6 @@ label input[type=file]{
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  .close-loaded{
-    position:absolute;
-    top:20px;
-    right:20px;
-  }
 }
 
 .loaded-image-big{
@@ -250,7 +245,7 @@ label input[type=file]{
   z-index: 99999999;
   background-color:rgba(0,0,0,0.9);
   overflow: auto;
-  .items-container-wrap{
+  .items-container-wrap, .article-container-wrap{
     position:relative;
     z-index: 20;
     width:480px;
@@ -259,6 +254,12 @@ label input[type=file]{
     box-sizing: border-box;
     padding:5px 0 10px 0;
     border-radius: 4px 4px 0 0;
+  }
+  .article-container-wrap{
+    width:60%;
+  }
+  .article-container{
+    padding:15px 15px 0 15px;
   }
   .items-container{
     padding:15px 15px 0 15px;

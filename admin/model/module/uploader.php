@@ -3,7 +3,7 @@ class ModelModuleUploader extends Model {
 
   public function install(){
     $this->db->query("
-    CREATE TABLE `" . DB_PREFIX . "uploader_count_paper` (
+    CREATE TABLE IF NOT EXISTS`" . DB_PREFIX . "uploader_count_paper` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `name` int(11) NOT NULL,
       `uploader_type` int(1) NOT NULL DEFAULT '0',
@@ -12,7 +12,7 @@ class ModelModuleUploader extends Model {
     ");
 
     $this->db->query("
-    CREATE TABLE `" . DB_PREFIX . "uploader_format` (
+    CREATE TABLE IF NOT EXISTS`" . DB_PREFIX . "uploader_format` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `name` varchar(100) NOT NULL,
       `ratio` varchar(50) NOT NULL,
@@ -26,7 +26,7 @@ class ModelModuleUploader extends Model {
     ");
 
     $this->db->query("
-    CREATE TABLE `" . DB_PREFIX . "uploader_image` (
+    CREATE TABLE IF NOT EXISTS`" . DB_PREFIX . "uploader_image` (
       `id` bigint(19) NOT NULL AUTO_INCREMENT,
       `name` varchar(32) NOT NULL,
       `session_id` varchar(64) NOT NULL,
@@ -46,7 +46,7 @@ class ModelModuleUploader extends Model {
     ");
 
     $this->db->query("
-    CREATE TABLE `" . DB_PREFIX . "uploader_option` (
+    CREATE TABLE IF NOT EXISTS`" . DB_PREFIX . "uploader_option` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `name` varchar(150) NOT NULL,
       `type` enum('select','checkbox') NOT NULL,
@@ -57,7 +57,7 @@ class ModelModuleUploader extends Model {
     ");
 
     $this->db->query("
-    CREATE TABLE `" . DB_PREFIX . "uploader_option_value` (
+    CREATE TABLE IF NOT EXISTS`" . DB_PREFIX . "uploader_option_value` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `option_id` int(11) NOT NULL,
       `text` varchar(150) NOT NULL,
@@ -68,7 +68,7 @@ class ModelModuleUploader extends Model {
     ");
 
     $this->db->query("
-    CREATE TABLE `" . DB_PREFIX . "uploader_paper_type` (
+    CREATE TABLE IF NOT EXISTS`" . DB_PREFIX . "uploader_paper_type` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `name` varchar(100) NOT NULL,
       `default_value` int(1) NOT NULL DEFAULT '0',
@@ -79,12 +79,22 @@ class ModelModuleUploader extends Model {
     ");
 
     $this->db->query("
-    CREATE TABLE `" . DB_PREFIX . "uploader_price` (
+    CREATE TABLE IF NOT EXISTS`" . DB_PREFIX . "uploader_price` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `key_text` varchar(80) NOT NULL,
       `format_id` int(11) DEFAULT NULL,
       `count_paper_id` int(11) DEFAULT NULL,
       `price` float NOT NULL,
+      PRIMARY KEY (`id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+    ");
+
+    $this->db->query("
+    CREATE TABLE IF NOT EXISTS`" . DB_PREFIX . "uploader_exception` (
+      `id` int(11) NOT NULL,
+      `paper_type_id` int(11) NOT NULL,
+      `format_id` int(11) NOT NULL,
+      `possibly` int(1) NOT NULL DEFAULT '1',
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");
@@ -101,6 +111,12 @@ class ModelModuleUploader extends Model {
     ");
 
     $this->db->query("
+    ALTER TABLE `" . DB_PREFIX . "uploader_exception`
+      ADD KEY `format_id` (`format_id`),
+      ADD KEY `paper_type_id` (`paper_type_id`);
+    ");
+
+    $this->db->query("
     ALTER TABLE `" . DB_PREFIX . "uploader_option_value`
       ADD CONSTRAINT `" . DB_PREFIX . "uploader_option_value_ibfk_1` FOREIGN KEY (`option_id`) REFERENCES `" . DB_PREFIX . "uploader_option` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
     ");
@@ -111,13 +127,19 @@ class ModelModuleUploader extends Model {
       ADD CONSTRAINT `" . DB_PREFIX . "uploader_price_ibfk_2` FOREIGN KEY (`count_paper_id`) REFERENCES `" . DB_PREFIX . "uploader_count_paper` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
     ");
 
+    $this->db->query("
+    ALTER TABLE `" . DB_PREFIX . "uploader_exception`
+      ADD CONSTRAINT `" . DB_PREFIX . "uploader_exception_ibfk_1` FOREIGN KEY (`format_id`) REFERENCES `" . DB_PREFIX . "uploader_format` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+      ADD CONSTRAINT `" . DB_PREFIX . "uploader_exception_ibfk_2` FOREIGN KEY (`paper_type_id`) REFERENCES `" . DB_PREFIX . "uploader_paper_type` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+    ");
+
     $this->saveLink(array('keyword' => 'image_uploader', 'type' => 'image'));
     $this->saveLink(array('keyword' => 'document_uploader', 'type' => 'document'));
   }
 
   public function remove(){
-    $this->db->query("DROP TABLE " . DB_PREFIX . "uploader_image, " . DB_PREFIX . "uploader_option_value, " . DB_PREFIX . "uploader_paper_type, " . DB_PREFIX . "uploader_price");
-    $this->db->query("DROP TABLE " . DB_PREFIX . "uploader_count_paper, " . DB_PREFIX . "uploader_format, " . DB_PREFIX . "uploader_option");
+    $this->db->query("DROP TABLE " . DB_PREFIX . "uploader_image, " . DB_PREFIX . "uploader_option_value, " . DB_PREFIX . "uploader_price, " . DB_PREFIX . "uploader_exception");
+    $this->db->query("DROP TABLE " . DB_PREFIX . "uploader_paper_type, " . DB_PREFIX . "uploader_count_paper, " . DB_PREFIX . "uploader_format, " . DB_PREFIX . "uploader_option");
     $this->db->query("DELETE FROM " . DB_PREFIX . "url_alias WHERE query = 'module/image_uploader'");
     $this->db->query("DELETE FROM " . DB_PREFIX . "url_alias WHERE query = 'module/document_uploader'");
   }
@@ -266,8 +288,25 @@ class ModelModuleUploader extends Model {
     }
   }
 
+  public function saveException($data){
+    if($this->db->query("SELECT COUNT(*) as `count` FROM " . DB_PREFIX . "uploader_exception WHERE paper_type_id = '" . $data['paper_type_id'] . "' AND format_id = '" . $data['format_id'] . "'")->row['count'] == 0){
+      $this->db->query("INSERT INTO " . DB_PREFIX . "uploader_exception (paper_type_id, format_id, possibly) VALUES ('" . $data['paper_type_id'] . "', '" . $data['format_id'] . "', '" . $data['possibly'] . "')");
+    }else{
+      $this->db->query("UPDATE " . DB_PREFIX . "uploader_exception SET possibly = '" . $data['possibly'] . "' WHERE paper_type_id = '" . $data['paper_type_id'] . "' AND format_id = '" . $data['format_id'] . "'");
+    }
+  }
+
+  public function getExceptions(){
+    $results = $this->db->query("SELECT * FROM " . DB_PREFIX . "uploader_exception")->rows;
+    $exception = array();
+    foreach($results as $result){
+      $exception[$result['paper_type_id'].'_'.$result['format_id']] = $result['possibly'];
+    }
+    return $exception;
+  }
+
   public function getPrices(){
-    $results = $this->db->query("SELECT * FROM `" . DB_PREFIX . "uploader_price`")->rows;
+    $results = $this->db->query("SELECT * FROM " . DB_PREFIX . "uploader_price")->rows;
     $val_price = array();
     foreach($results as $result){
       $val_price[$result['key_text'].'_'.($result['format_id']==NULL?'':$result['format_id']).'_'.($result['count_paper_id']==NULL?'':$result['count_paper_id'])] = $result['price'];

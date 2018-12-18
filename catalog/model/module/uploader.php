@@ -75,9 +75,7 @@ class ModelModuleUploader extends Model{
     $results = $this->db->query($sql)->rows;
     foreach($results as $key => $result){
       if(!is_null($result['article_id'])){
-        $results[$key]['article'] = $this->getArticle($result['article_id']);
-      }else{
-        $results[$key]['article'] = "";
+        $results[$key]['article_id'] = $result['article_id'];
       }
       $results[$key]['values'] = $this->getRows("option_value", 0, $result['id']);
     }
@@ -88,15 +86,6 @@ class ModelModuleUploader extends Model{
     $sql = "SELECT type FROM " . DB_PREFIX . "uploader_option WHERE id='" . (int)$id . "' AND uploader_type = '" . (int)$uploader_type . "'";
     $result = $this->db->query($sql)->row;
     return isset($result['type'])?$result['type']:null;
-  }
-
-  public function getArticle($id){
-    $result = $this->db->query("SELECT title FROM " . DB_PREFIX . "information_description WHERE information_id = '" . (int)$id . "'")->row;
-    if(isset($result['title'])){
-      $result['link'] = $this->url->link('information/information', 'information_id=' .  $id);
-      return $result;
-    }
-    return "";
   }
 
   public function getPrices(){
@@ -114,6 +103,12 @@ class ModelModuleUploader extends Model{
       $count[$format['id']] = $this->db->query("SELECT SUM(copy_count) as `count` FROM " . DB_PREFIX . "uploader_image WHERE format_id = '" . (int)$format['id'] . "' AND session_id = '" . $this->db->escape($id_session) . "'")->row['count'];
     }
     return $count;
+  }
+
+  public function getArticle($id){
+		$query = $this->db->query("SELECT DISTINCT * FROM " . DB_PREFIX . "information i LEFT JOIN " . DB_PREFIX . "information_description id ON (i.information_id = id.information_id) LEFT JOIN " . DB_PREFIX . "information_to_store i2s ON (i.information_id = i2s.information_id) WHERE i.information_id = '" . (int)$id . "' AND id.language_id = '" . (int)$this->config->get('config_language_id') . "' AND i2s.store_id = '" . (int)$this->config->get('config_store_id') . "' AND i.status = '1'");
+
+		return $query->row;
   }
 }
 ?>

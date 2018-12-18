@@ -8,6 +8,7 @@
     <a href="#price"><?php echo $tab_price; ?></a>
     <?php if($type == "image"){ ?>
       <a href="#quality"><?php echo $tab_quality; ?></a>
+      <a href="#exception"><?php echo $tab_exception; ?></a>
     <?php } ?>
     <?php if((int)$select_options_count > 0){ ?>
       <a href="#options" class="selected"><?php echo $tab_option; ?></a>
@@ -109,6 +110,32 @@
                 <td><input type="text" name="quality[<?php echo $format['id']; ?>][bad]" value="<?php echo $format['bad']; ?>"></td>
                 <td><input type="text" name="quality[<?php echo $format['id']; ?>][normal]" value="<?php echo $format['normal']; ?>"></td>
                 <td><input type="text" name="quality[<?php echo $format['id']; ?>][good]" value="<?php echo $format['good']; ?>"></td>
+              </tr>
+            <?php } ?>
+          </tbody>
+        </table>
+        <a class="button save"><?php echo $button_save; ?></a>
+      </form>
+    </div>
+
+    <div class="tab" id="exception">
+      <form action="index.php?route=module/uploader/saveExceptions&token=<?php echo $token; ?>" method="post">
+        <table class="list">
+          <thead>
+            <tr>
+              <td></td>
+              <?php foreach($paper_types as $type){ ?>
+                <td><?php echo $type['name']; ?></td>
+              <?php } ?>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach($formats as $format){ ?>
+              <tr>
+                <td><?php echo $format['name']; ?></td>
+                <?php foreach($paper_types as $type){ ?>
+                  <td><input type="text" name="exception[<?php echo $type['id']; ?>_<?php echo $format['id']; ?>]" value="<?php echo isset($exception[$type['id'] . '_' . $format['id']])?$exception[$type['id'] . '_' . $format['id']]:'1'; ?>"></td>
+                <?php } ?>
               </tr>
             <?php } ?>
           </tbody>

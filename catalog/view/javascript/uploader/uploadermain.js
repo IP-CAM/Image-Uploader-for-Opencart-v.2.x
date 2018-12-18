@@ -70,6 +70,38 @@ var uploader = function(settings) {
     self.preloader.wrap.removeClass("loading");
   };
 
+  var showArticle = function(id) {
+    self.preloader.show();
+    $.ajax({
+      url: "index.php?route=module/" + settings.uploaderType + "_uploader/getArticle",
+      type: "post",
+      dataType: "json",
+      data: "article_id=" + (+id),
+      beforeSend: () => {
+        if(!self.onlineTrigger){
+          $(document).find(".item-controls_delete").attr("disabled", false);
+          self.preloader.hide();
+          self.error("Проверьте подключение к интернету и попробуйте еще раз.");
+        }
+      },
+      success: json => {
+        if(json['success']) {
+          var articlePage = self.main.uploadWrap.find("#article-page");
+          articlePage.find(".loaded-title").html(json.success.title);
+          json.success.description = json.success.description.replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&');
+          articlePage.find(".article-container").html(json.success.description);
+          articlePage.removeClass("unset");
+          $("body").css("overflow","hidden");
+        }
+        self.preloader.hide();
+      }
+    });
+  }
+
   var showBigImage = function(trigger) {
     self.preloader.show();
     var imgPage = self.main.uploadWrap.find("#image-page");
@@ -130,10 +162,12 @@ var uploader = function(settings) {
     if(itemsIsset) {
       self.main.summaryWrap.find(".confirm").attr("disabled", false);
       self.main.summaryWrap.find(".format-box").removeClass("unset");
+      self.main.summaryWrap.filter(".top-summary").removeClass("unset");
       self.main.massWrap.removeClass("unset");
     }else{
       self.main.summaryWrap.find(".confirm").attr("disabled", true);
       self.main.summaryWrap.find(".format-box").addClass("unset");
+      self.main.summaryWrap.filter(".top-summary").addClass("unset");
       self.main.massWrap.addClass("unset");
     }
 
@@ -230,7 +264,7 @@ var uploader = function(settings) {
         values[$(trigger).attr("name")] = $(trigger).val();
       else
         values[$(trigger).attr("name")] = $(trigger).prop("checked")?1:0;
-    };
+    }
 
     self.preloader.show();
 
@@ -249,26 +283,51 @@ var uploader = function(settings) {
       success: json => {
         if(json['success']){
           if($(trigger).hasClass("mass-submit")){
-            for(key in values){
-              $(".item.selected").find("select[name=\'" + key + "\'], input[type=\'text\'][name=\'" + key + "\'], input[type=\'radio\'][name=\'" + key + "\']").val(values[key]).attr("data-reset-val", values[key]);
-              $(".item.selected").find("input[type=\'checkbox\'][name=\'" + key + "\']").prop("checked", values[key]).attr("data-reset-val", values[key]);
+            if(json.success.hasOwnProperty("exception") && json.success.exception_images == "all"){
+              delete values['format_id'];
+              delete values['paper_type_id'];
             }
 
-            if(values.hasOwnProperty("format_id") || values.hasOwnProperty("set_in_format")){
-              for(key in items){
-                calculateMask(".item[data-name=\'" + items[key] + "\']");
+            for(i in items){
+              var exception = null,
+                  item = $(".item[data-name=\'" + items[i] + "\']");
+
+              if(json.success.hasOwnProperty("exception_images") && json.success.exception_images.hasOwnProperty(item.attr("data-name"))){
+                exception = json.success.exception_images[item.attr("data-name")];
+              }
+
+              for(key in values){
+                if(key != exception){
+                  $(item).find("select[name=\'" + key + "\'], input[type=\'text\'][name=\'" + key + "\'], input[type=\'radio\'][name=\'" + key + "\']").val(values[key]).attr("data-reset-val", values[key]);
+                  $(item).find("input[type=\'checkbox\'][name=\'" + key + "\']").prop("checked", values[key]).attr("data-reset-val", values[key]);
+                }
+              }
+
+              if((values.hasOwnProperty("format_id") || values.hasOwnProperty("set_in_format")) && exception != "format_id"){
+                calculateMask(item);
               }
             }
 
             $(".item.selected").addClass("updated");
           }else{
-            $(trigger).attr("data-reset-val", values[Object.keys(values)[0]]);
-            if(values.hasOwnProperty("format_id") || values.hasOwnProperty("set_in_format")) calculateMask(".item[data-name=\'" + items[0] + "\']");
-            $(".item[data-name=\'" + items[0] + "\']").addClass("updated");
+            if(json.success.hasOwnProperty("exception")){
+              resetValues(items, values);
+            }else{
+              $(trigger).attr("data-reset-val", values[Object.keys(values)[0]]);
+              if(values.hasOwnProperty("format_id") || values.hasOwnProperty("set_in_format")) calculateMask(".item[data-name=\'" + items[0] + "\']");
+              $(".item[data-name=\'" + items[0] + "\']").addClass("updated");
+            }
           }
-          self.main.massWrap.find("input:not([name=\'copy_count\']), select").val("");
-          self.main.massWrap.find("input[type=\'checkbox\']").prop("checked", false);
-          self.main.massWrap.find("input[name=\'copy_count\']").val(1);
+
+          if(json.success.hasOwnProperty("exception")){
+            self.error(json.success.exception);
+          }
+
+          if($(trigger).hasClass("mass-submit")){
+            self.main.massWrap.find("input:not([name=\'copy_count\']), select").val("");
+            self.main.massWrap.find("input[type=\'checkbox\']").prop("checked", false);
+            self.main.massWrap.find("input[name=\'copy_count\']").val(1);
+          }
           setTimeout(() => {
             $(".item").removeClass("updated");
           }, 2000);
@@ -594,6 +653,12 @@ var uploader = function(settings) {
     $(document).on("click", ".loaded .upload-selected", function() {
       uploadSelected(this);
     });
+
+    $(document).on("click", "a[href=\'#article\']", function(e){
+      e.preventDefault();
+
+      showArticle($(this).attr("data-article"));
+    })
 
     window.addEventListener ('online', () => self.onlineTrigger = true);
     window.addEventListener ('offline', () => self.onlineTrigger = false);

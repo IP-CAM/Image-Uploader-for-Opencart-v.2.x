@@ -163,7 +163,8 @@ class ControllerModuleImageUploader extends Controller{
     $this->data['server_redirect'] = HTTPS_SERVER;
 
     $this->children = array(
-      'common/header'
+      'common/header',
+      'common/footer'
     );
 
     $this->response->setOutput($this->render());
@@ -567,8 +568,32 @@ class ControllerModuleImageUploader extends Controller{
         $values = json_decode(html_entity_decode(urldecode($this->request->post['values'])), true);
         $this->model_module_uploader->getOptionRows("image");
 
+        $json_exception = array();
+        $json_exception['exception'] = $this->language->get('error_exception');
+        $json_exception['exception_images'] = array();
+
+        if(isset($values['paper_type_id']) || isset($values['format_id'])){
+          $results = $this->model_module_uploader->getRows('exception');
+          $exception = array();
+          foreach($results as $result){
+            $exception[$result['paper_type_id'] . '_' . $result['format_id']] = (int)$result['possibly'];
+          }
+        }
+
+        if(isset($values['paper_type_id']) && isset($values['format_id'])){
+          if(isset($exception[$values['paper_type_id'] . '_' . $values['format_id']]) && !$exception[$values['paper_type_id'] . '_' . $values['format_id']]){
+            unset($values['paper_type_id'], $values['format_id']);
+            $json_exception['exception_images'] = 'all';
+          }
+        }
+
         foreach($images as $image){
           $options = null;
+
+          if(isset($values['paper_type_id']) || isset($values['format_id'])){
+            $reset_image = $this->model_module_uploader->getImage($image, $session_id);
+          }
+
           foreach($values as $key => $value){
             if(strpos($key, "option") !== false){
               if(is_null($options)){
@@ -583,10 +608,22 @@ class ControllerModuleImageUploader extends Controller{
                 }
               }else{
                 $type = $this->model_module_uploader->getOptionType('image', $option_data[1]);
-                if(!is_null($type)){
+                if(($type == 'checkbox' && (int)$value != 0) || ($type == 'select')){
                   $options[$option_data[1]]['value'] = $value;
                   $options[$option_data[1]]['type'] = $type;
                 }
+              }
+            }else if($key == "paper_type_id"){
+              if(isset($exception[(int)$value . '_' . $reset_image['format_id']]) && !$exception[(int)$value . '_' . $reset_image['format_id']]){
+                $json_exception['exception_images'][$image] = 'paper_type_id';
+              }else{
+                $this->model_module_uploader->updateImage($key, $value, $image, $session_id);
+              }
+            }else if($key == "format_id"){
+              if(isset($exception[$reset_image['paper_type_id'] . '_' . (int)$value]) && !$exception[$reset_image['paper_type_id'] . '_' . (int)$value]){
+                $json_exception['exception_images'][$image] = 'format_id';
+              }else{
+                $this->model_module_uploader->updateImage($key, $value, $image, $session_id);
               }
             }else{
               $this->model_module_uploader->updateImage($key, $value, $image, $session_id);
@@ -598,6 +635,12 @@ class ControllerModuleImageUploader extends Controller{
         }
         if(!isset($json['error'])){
           $json['success'] = $this->getData($session_id);
+
+          if(empty($json_exception['exception_images'])){
+            unset($json_exception['exception_images'], $json['success']['exception']);
+          }else{
+            $json['success'] = array_merge($json['success'], $json_exception);
+          }
         }
       }
     }
@@ -652,6 +695,23 @@ class ControllerModuleImageUploader extends Controller{
           $json['error'] = $this->language->get('error_copy') . " " . $e->getMessage();
         }
       }
+    }
+
+    $this->response->addHeader('Content-Type: application/json');
+    $this->response->setOutput(json_encode($json));
+  }
+
+  public function getArticle(){
+    $json = array();
+    if($this->request->server['REQUEST_METHOD'] == 'POST'){
+      $this->load->model('module/uploader');
+
+      $article = $this->model_module_uploader->getArticle($this->request->post['article_id']);
+
+      $json['success'] = array(
+        'title' => $article['title'],
+        'description' => $article['description']
+      );
     }
 
     $this->response->addHeader('Content-Type: application/json');

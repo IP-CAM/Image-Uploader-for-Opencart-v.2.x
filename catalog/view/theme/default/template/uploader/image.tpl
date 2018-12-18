@@ -35,6 +35,17 @@
     <div id="image-page" class="loaded unset">
       <img src="" alt="" class="loaded-image-big">
     </div>
+    <div id="article-page" class="loaded unset">
+      <div class="article-container-wrap">
+        <nav class="loaded-nav">
+          <div class="loaded-title"></div>
+          <div class="loaded-buttons">
+            <button class="btn close"><i class="fas fa-times"></i></button>
+          </div>
+        </nav>
+        <div class="article-container"></div>
+      </div>
+    </div>
   </div>
 
   <div class="mass-change-container <?php if(!$images){ ?>unset<?php } ?>">
@@ -98,7 +109,7 @@
     <?php } ?>
   </div>
 
-  <div class="summary-container">
+  <div class="summary-container top-summary <?php if(!$images){ ?>unset<?php } ?>">
     <div class="format-box <?php if(empty($images)){ ?>unset<?php } ?>">
       <span class="title"><?php echo $text_multiplicity; ?></span>
       <?php foreach($formats as $format) { ?>
@@ -114,6 +125,20 @@
           </div>
         <?php } ?>
       <?php } ?>
+    </div>
+    <div class="total-box">
+      <div class="item">
+        <span class="title"><?php echo $text_total_count; ?>:</span>
+        <span class="value value-count"><?php echo $total_count; ?><span>
+      </div>
+      <div class="item">
+        <span class="title"><?php echo $text_price; ?>:</span>
+        <span class="value value-full-price"><?php echo $total_full_price; ?><span>
+      </div>
+      <div class="item">
+        <span class="title"><?php echo $text_full_price; ?>:</span>
+        <span class="value value-price"><?php echo $total_price; ?><span>
+      </div>
     </div>
   </div>
 
@@ -167,7 +192,7 @@
           </div>
           <?php foreach($options as $option) {?>
             <div class="action-group">
-              <span class="title"><?php if(!empty($option['article'])){ ?><a href="<?php echo $option['article']['link']; ?>" target="_blank" rel="noopener"><?php } ?><?php echo $option['name']; ?><?php if(!empty($option['article'])){ ?></a><?php }?></span>
+              <span class="title"><?php if(!empty($option['article_id'])){ ?><a href="#article" data-article="<?php echo $option['article_id']; ?>"><?php } ?><?php echo $option['name']; ?><?php if(!empty($option['article_id'])){ ?></a><?php }?></span>
               <?php if($option['type'] == "select"){ ?>
                 <select name="option_<?php echo $option['id']; ?>" data-reset-val="<?php echo $image['options'][$option['id']]['value']; ?>">
                   <?php foreach($option['values'] as $val){ ?>
@@ -252,7 +277,7 @@
       <div class="loaded-buttons">
         <button class="btn upload-selected"><?php echo $text_upload_selected; ?></button>
         <button class="btn reload"><i class="fas fa-sync-alt"></i></button>
-        <button class="btn close-loaded"><i class="fas fa-times"></i></button>
+        <button class="btn close"><i class="fas fa-times"></i></button>
       </div>
     </nav>
     <ul class="items-container"></ul>
@@ -376,7 +401,7 @@
     </div>
     <?php foreach($options as $option) {?>
       <div class="action-group">
-        <span class="title"><?php if(!empty($option['article'])){ ?><a href="<?php echo $option['article']['link']; ?>" target="_blank" rel="noopener"><?php } ?><?php echo $option['name']; ?><?php if(!empty($option['article'])){ ?></a><?php }?></span>
+        <span class="title"><?php if(!empty($option['article_id'])){ ?><a href="#article" data-article="<?php echo $option['article_id']; ?>"><?php } ?><?php echo $option['name']; ?><?php if(!empty($option['article_id'])){ ?></a><?php }?></span>
         <?php if($option['type'] == "select"){ ?>
           <select name="option_<?php echo $option['id']; ?>" data-reset-val="<% if(options.hasOwnProperty('<?php echo $option['id']; ?>')){ %><%=options['<?php echo $option['id']; ?>'].value%><% } %>">
             <?php foreach($option['values'] as $val){ ?>
@@ -441,3 +466,4 @@ uploader({
   <?php } ?>
 });
 --></script>
+<?php echo $footer; ?>

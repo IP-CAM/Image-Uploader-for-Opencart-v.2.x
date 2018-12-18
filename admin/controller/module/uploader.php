@@ -226,6 +226,7 @@ class ControllerModuleUploader extends Controller {
 		$this->data['tab_price'] = $this->language->get('tab_price');
 		$this->data['tab_option'] = $this->language->get('tab_option');
 		$this->data['tab_quality'] = $this->language->get('tab_quality');
+		$this->data['tab_exception'] = $this->language->get('tab_exception');
 		$this->data['h3_price_format'] = $this->language->get('h3_price_format');
 		$this->data['h3_price_option'] = $this->language->get('h3_price_option');
 		$this->data['text_sort_pl'] = $this->language->get('text_sort_pl');
@@ -248,6 +249,7 @@ class ControllerModuleUploader extends Controller {
 		$this->data['counts_paper'] = $this->model_module_uploader->getRows("count_paper");
 		$this->data['options'] = $this->model_module_uploader->getOptionRows(0);
 		$this->data['price'] = $this->model_module_uploader->getPrices();
+		$this->data['exception'] = $this->model_module_uploader->getExceptions();
 		$this->data['select_options_count'] = $this->model_module_uploader->getCountSelectOption(0);
 
 		$this->data['token'] = $this->request->get['token'];
@@ -293,6 +295,26 @@ class ControllerModuleUploader extends Controller {
 					'good' => $row['good']
 				);
 				$this->model_module_uploader->saveQuality($data);
+			}
+			$json['success'] = true;
+		}
+
+		$this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($json));
+	}
+
+	public function saveExceptions(){
+		$json = array();
+		if($this->request->server['REQUEST_METHOD'] == 'POST'){
+			$this->load->model('module/uploader');
+			foreach($this->request->post['exception'] as $key => $row){
+				$val = explode('_', $key);
+				$data = array(
+					'paper_type_id' => (int)$val[0],
+					'format_id' => (int)$val[1],
+					'possibly' => (int)$row
+				);
+				$this->model_module_uploader->saveException($data);
 			}
 			$json['success'] = true;
 		}
