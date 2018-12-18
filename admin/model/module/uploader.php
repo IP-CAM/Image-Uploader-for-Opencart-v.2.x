@@ -91,7 +91,7 @@ class ModelModuleUploader extends Model {
 
     $this->db->query("
     CREATE TABLE IF NOT EXISTS`" . DB_PREFIX . "uploader_exception` (
-      `id` int(11) NOT NULL,
+      `id` int(11) NOT NULL AUTO_INCREMENT,
       `paper_type_id` int(11) NOT NULL,
       `format_id` int(11) NOT NULL,
       `possibly` int(1) NOT NULL DEFAULT '1',
