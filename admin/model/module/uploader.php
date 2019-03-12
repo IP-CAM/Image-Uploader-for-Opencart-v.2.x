@@ -41,6 +41,7 @@ class ModelModuleUploader extends Model {
       `copy_count` int(11) NOT NULL,
       `size` int(11) NOT NULL,
       `date` datetime NOT NULL,
+      `cart` int(11) DEFAULT NULL,
       PRIMARY KEY (`id`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
     ");
