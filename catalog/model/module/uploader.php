@@ -1,8 +1,8 @@
 <?php
 class ModelModuleUploader extends Model{
   public function getImages($id_session){
-    $this->db->query("UPDATE " . DB_PREFIX . "uploader_image SET date = NOW() + INTERVAL 7 DAY WHERE session_id = '" . $this->db->escape($id_session) . "'");
-    return $this->db->query("SELECT * FROM " . DB_PREFIX . "uploader_image WHERE session_id = '" . $this->db->escape($id_session) . "'")->rows;
+    $this->db->query("UPDATE " . DB_PREFIX . "uploader_image SET date = NOW() + INTERVAL 7 DAY WHERE cart IS NULL AND session_id = '" . $this->db->escape($id_session) . "'");
+    return $this->db->query("SELECT * FROM " . DB_PREFIX . "uploader_image WHERE cart IS NULL AND session_id = '" . $this->db->escape($id_session) . "'")->rows;
   }
 
   public function getImage($name, $id_session){
@@ -109,6 +109,51 @@ class ModelModuleUploader extends Model{
 		$query = $this->db->query("SELECT DISTINCT * FROM " . DB_PREFIX . "information i LEFT JOIN " . DB_PREFIX . "information_description id ON (i.information_id = id.information_id) LEFT JOIN " . DB_PREFIX . "information_to_store i2s ON (i.information_id = i2s.information_id) WHERE i.information_id = '" . (int)$id . "' AND id.language_id = '" . (int)$this->config->get('config_language_id') . "' AND i2s.store_id = '" . (int)$this->config->get('config_store_id') . "' AND i.status = '1'");
 
 		return $query->row;
+  }
+
+  public function addProduct($id_session, $name, $price, $special){
+    $this->db->query("INSERT INTO " . DB_PREFIX . "product SET
+			model = '".$name."',
+			quantity = '1',
+			shipping = '1',
+			weight_class_id = '1',
+			sort_order = '1',
+			status = '1',
+			price = '".$price."',
+			image = 'data/photo.jpg',
+			date_available = '".date('Y-m-d')."',
+			date_added = '".date('Y-m-d G:i:s')."'"
+		);
+
+    $product_id = $this->db->getLastId();
+
+    if($special < $price){
+      $this->db->query("INSERT INTO " . DB_PREFIX . "product_special SET
+        product_id = '" . (int)$product_id . "',
+        customer_group_id	= '1',
+        priority = '1',
+        price = '" . $special . "',
+        date_start = '0000-00-00',
+        date_end = '0000-00-00'"
+      );
+    }
+
+    $this->load->model('localisation/language');
+
+		foreach($this->model_localisation_language->getLanguages() as $language) {
+	    $this->db->query("INSERT INTO " . DB_PREFIX . "product_description SET
+				`product_id` = '".(int)$product_id."',
+				`language_id` = '".$language['language_id']."',
+				`name` = '".$name."',
+				`description` = ''"
+			);
+		}
+
+		$this->db->query("INSERT INTO " . DB_PREFIX . "product_to_store SET `product_id` = '" . (int)$product_id . "', `store_id` = '0'");
+
+    $this->db->query("UPDATE " . DB_PREFIX . "uploader_image SET cart = '" . (int)$product_id . "' WHERE cart IS NULL AND session_id = '" . $this->db->escape($id_session) . "'");
+
+    return $product_id;
   }
 }
 ?>

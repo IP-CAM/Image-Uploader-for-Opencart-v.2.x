@@ -523,6 +523,43 @@ var uploader = function(settings) {
     }
   };
 
+  var confirm = function() {
+    self.preloader.show("Добавляем в корзину, пожалуйста подождите!");
+    $.ajax({
+      url: "index.php?route=module/" + settings.uploaderType + "_uploader/addToCart",
+      type: "post",
+      dataType: "json",
+      beforeSend: () => {
+        if(!self.onlineTrigger){
+          $("body").css("overflow","visible");
+          self.preloader.hide();
+          self.error("Проверьте подключение к интернету и попробуйте еще раз.");
+        }
+      },
+      success: json => {
+        if(json["success"]){
+          self.main.itemsWrap.empty();
+  				$('.success').fadeIn('slow');
+          addToCart(json["success"]['id']);
+          self.checkSelected();
+          self.main.summaryWrap.find(".value-count").text(0);
+          self.main.summaryWrap.find(".value-full-price").text("₴0.00");
+          self.main.summaryWrap.find(".value-price").text("₴0.00");
+          self.main.summaryWrap.find(".confirm").attr("disabled", true);
+          self.main.summaryWrap.find(".format-box").addClass("unset");
+          self.main.summaryWrap.filter(".top-summary").addClass("unset");
+          self.main.massWrap.addClass("unset");
+          self.preloader.hide();
+  				$('html, body').animate({ scrollTop: 0 }, 'slow');
+        }else{
+          $("body").css("overflow","visible");
+          self.preloader.hide();
+          self.error(responseParsed.error);
+        }
+      }
+    });
+  };
+
   $(window).on("load", function() {
     if(typeof settings.ratio != "undefined"){
       self.main.itemsWrap.find(".item").each((i, item) => calculateMask(item));
@@ -658,7 +695,11 @@ var uploader = function(settings) {
       e.preventDefault();
 
       showArticle($(this).attr("data-article"));
-    })
+    });
+
+    $(document).on("click", ".confirm", function() {
+      confirm();
+    });
 
     window.addEventListener ('online', () => self.onlineTrigger = true);
     window.addEventListener ('offline', () => self.onlineTrigger = false);

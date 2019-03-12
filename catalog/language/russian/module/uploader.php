@@ -30,6 +30,7 @@ $_['text_full_price']           = "Сумма со скидкой";
 $_['text_price']                = "Сумма";
 $_['text_load_more']            = "Загрузить больше";
 $_['text_check_all']            = "Выбрать все";
+$_['text_image_uploader_name']  = "Фотопечать %s фото";
 
 $_['error_format']              = "Поддерживаются форматы rar, zip, png, jpg, jpeg!";
 $_['error_zip']                 = "Архив поврежден!";

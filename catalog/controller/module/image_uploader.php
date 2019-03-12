@@ -717,5 +717,130 @@ class ControllerModuleImageUploader extends Controller{
     $this->response->addHeader('Content-Type: application/json');
     $this->response->setOutput(json_encode($json));
   }
+
+  public function addToCart(){
+    $json = array();
+    if($this->request->server['REQUEST_METHOD'] == 'POST'){
+      if(isset($this->request->cookie['uis'])){
+        $uis = $this->request->cookie['uis'];
+      }else{
+        $json['error'] = $this->language->get('error_uis');
+      }
+
+      if(!isset($json['error'])){
+        $this->load->model('module/uploader');
+        $this->load->language('module/uploader');
+        $session_id = hash("sha256", $uis);
+
+
+
+        $data = array();
+        $formats = $this->model_module_uploader->getRows('format', 0);
+        $paper_types = $this->model_module_uploader->getRows('paper_type', 0);
+        $options_available = $this->model_module_uploader->getRows('option', 0);
+        $option_values = $this->model_module_uploader->getRows('option_value', 0);
+
+        $price = $this->model_module_uploader->getPrices();
+        $images = $this->model_module_uploader->getImages($session_id);
+        $count_format = $this->model_module_uploader->getCountFormats($formats, $session_id);
+        $data['total_full_price'] = $data['total_count'] = $data['total_price'] = 0;
+        $data['names'] = array();
+
+        $count_paper_arr = array();
+        $count_paper_arr[1] = '';
+        $counts_paper = $this->model_module_uploader->getRows('count_paper', 0);
+        foreach($counts_paper as $count){
+          $count_paper_arr[$count['name']] = $count['id'];
+        }
+
+        foreach($formats as $key => $format){
+          $formats[$format['id'] . '-'] = $format['name'];
+          unset($formats[$key]);
+        }
+
+        foreach($paper_types as $key => $paper_type){
+          $paper_types[$paper_type['id'] . '-'] = mb_strimwidth($paper_type['name'], 0, 4);
+          unset($paper_types[$key]);
+        }
+
+        foreach($options_available as $key => $option){
+          $options_available[$option['id'] . '-']['name'] = mb_strimwidth($option['name'], 0, 4);
+          foreach($option['values'] as $val){
+            $options_available[$option['id'] . '-']['values'][$val['id']] = mb_strimwidth($val['text'], 0, 4);;
+          }
+          unset($options_available[$key]);
+        }
+
+        foreach($images as $img_key => $image){
+          $image_name = $formats[$image['format_id'] . '-'] . '__' . $paper_types[$image['paper_type_id'] . '-'] . '__кол-во-' . $image['copy_count'] . '__впис-' . $image['set_in_format'] . '__';
+
+          $image_price_option = 0;
+          $options = json_decode($image['options'], true);
+          foreach($options as $key => $option){
+            if($option['type'] == 'select'){
+              $image_name .= $options_available[$key . '-']['name'] . '-' . $options_available[$key . '-']['values'][$option['value']] . '__';
+              $image_price_option += (float)$price['option-' . $key . '-' . $option['value'] . '__'];
+            }else{
+              $image_name .= $options_available[$key . '-']['name'] . '-1__';
+              $image_price_option += (float)$price['option-' . $key . '__'];
+            }
+          }
+
+          $image_name = substr($image_name, 0, -2);
+
+          $count_id = '';
+          foreach($count_paper_arr as $key => $count){
+            if($key < $count_format[$image['format_id']]){
+              $count_id = $count;
+            }
+          }
+
+          $image_price = (float)$price['price_' . $image['format_id'] . '_' . $count_id] * $image['copy_count'];
+          $image_price = $image_price + $image_price_option;
+
+          $image_full_price = (float)$price['price_' . $image['format_id'] . '_'] * $image['copy_count'];
+          $image_full_price = $image_full_price + $image_price_option;
+
+
+          $data['total_price'] += $image_price;
+          $data['total_full_price'] += $image_full_price;
+          $data['total_count'] += $image['copy_count'];
+          $data['names'][$img_key] = $image_name;
+        }
+
+        $name = sprintf($this->language->get('text_image_uploader_name'), $data['total_count']);
+
+        $json['success']['id'] = $product_id = $this->model_module_uploader->addProduct($session_id, $name, $data['total_full_price'], $data['total_price']);
+
+        $old = umask(0);
+        if(!file_exists(DIR_IMAGE . "uploader_confirm/")){
+          @mkdir(DIR_IMAGE . "uploader_confirm/", 0777);
+        }
+        if(!file_exists(DIR_IMAGE . "uploader_confirm/" . $product_id . "/")){
+          @mkdir(DIR_IMAGE . "uploader_confirm/" . $product_id . "/", 0777);
+        }
+
+        asort($data['names']);
+        $i = 1;
+        foreach($data['names'] as $key => $name){
+          $file = explode('.', strrchr($images[$key]['path'], '/'));
+          $new_path = DIR_IMAGE . 'uploader_confirm/' . $product_id . '/' . $i . '_' . $name . '.' . $file[1];
+          copy($images[$key]["path"], $new_path);
+          $this->model_module_uploader->updateImage("path", $new_path, $images[$key]['name'], $session_id);
+          $i++;
+        }
+
+        $this->removeDirectory(DIR_IMAGE . 'uploader_base/' . $session_id);
+        $this->removeDirectory(DIR_IMAGE . 'uploader_tmp/' . $session_id);
+        umask($old);
+
+        $uis = md5(rand(0, 200) * rand(0, 200) . openssl_random_pseudo_bytes(5));
+      	setcookie('uis', $uis, time() + 3600 * 24 * 7, '/');
+      }
+    }
+
+    $this->response->addHeader('Content-Type: application/json');
+    $this->response->setOutput(json_encode($json));
+  }
 }
 ?>
